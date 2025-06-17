@@ -4,15 +4,15 @@ This specification is being written using a different technique, which has three
 This is the first eat our own dog food run of a new template, using LaTeX and the Overleaf online editing system.  There are many parts to this, but the vast majority of the LaTeX has been provided to, and hidden from, the authors.  The intent is that the authors can concentrate on the content, not the formatting or structure.
 
 - OMGProvidedFiles/
-The core of the LaTeX definitions and mechanics are found in the OMGProvidedFiles folder.  These are created for you when you ask for a new project.  These drive the entire LaTeX process, do *not* edit these files, unless you are 110% sure of what you are doing.  (And, if you do edit because you need something, let us know so we can discuss incorporating it into the core.)  Generally speaking, if you need to add LaTeX packages, new commands, etc, place them into Submission_UserPreamble.tex at the top level.  That's your sandbox to do with what you please.  These files are to be considered read-only, and only described here as a warning for the curious.
+The core of the LaTeX definitions and mechanics are found in the OMGProvidedFiles folder.  These are created for you when you ask for a new project.  These drive the entire LaTeX process, do *not* edit these files, unless you are 110% sure of what you are doing.  (And, if you do edit because you need something, let us know so we can discuss incorporating it into the core.)  Generally speaking, if you need to add LaTeX packages, new commands, etc, place them into Specification_AuthorSettings.tex at the top level.  That's your sandbox to do with what you please.  These files are to be considered read-only, and only described here as a warning for the curious.
 
-    Submission_Template.tex     The main LaTeX file.  This is what is designated as the 'top' file.
+    Specification_Template.tex     The main LaTeX file.  This is what is designated as the 'top' file.
                                 It sets up the entire document for you, and creates the structure.
 
     Style (.sty) files are LaTeX command bundles.
     omg.sty                     omg.sty provides the basics used across all OMG documents.
     omg_rfp.sty                 omg_rfp.sty is for creating an RFP.
-    omg_submission.sty          omg_submission.sty is for creating a submission in response to an RFP.
+    omg_specification.sty          omg_specification.sty is for creating a submission in response to an RFP.
 
     .bib files are bibliography databases.  These are provided for your convenience.  You can refer to any of these entries via \cite{<entrycode>} and it will build your bibliography for you according to OMG requirements.
     iso.bib         ISO standards
@@ -24,7 +24,7 @@ Files that are generated from your models are placed into the GeneratedContent f
 
 The remaining files are for you to edit:
 
-    - Submission_Setup.tex is for putting in the basics (title, spec acronym, important dates, document number, etc) this will be machine generated in the future from OMG databases.  Take some time to inspect this file, these macros form much of the backbone of the document you're producing.
+    - Specification_Setup.tex is for putting in the basics (title, spec acronym, important dates, document number, etc) this will be machine generated in the future from OMG databases.  Take some time to inspect this file, these macros form much of the backbone of the document you're producing.
 
     - Subsmission_UserPreamble.tex is for customizing your LaTeX system to your needs.  Most users should not have to, but if you find yourself wanting to dive into OMGProvidedFiles/, make your edits here instead.  Some common useful things have already been added here for you, such as turning on/off DRAFT watermarking, setting a new folder for model generated content instead of the default GeneratedContent/, etc.  This is your place to control LaTeX.
 
@@ -52,7 +52,7 @@ The remaining files are for you to edit:
 
     Note that there *is no section 3 Bibliography*.  LaTeX creates a bibliography for you, automatically, based on what sources you cite from the .bib files, and ensures it is formatted according to OMG requirements.
 
-    - submission.bib is your personal bibliography file, add your non-OMG, non-ISO, non-W3 references here.  For help with creating .bib entries, you can refer to any number of online resources, or ask me at the contact information at the end of this document.
+    - specification.bib is your personal bibliography file, add your non-OMG, non-ISO, non-W3 references here.  For help with creating .bib entries, you can refer to any number of online resources, or ask me at the contact information at the end of this document.
 
     - In addition, you are free to create new files at this level for inclusion, if you would like.  You would include them in your document using \subimport{}{MyFile}
 

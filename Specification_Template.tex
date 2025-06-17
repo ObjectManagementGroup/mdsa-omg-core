@@ -1,5 +1,5 @@
 % \documentclass[10pt,english,twoside]{report}
-\usepackage{omg_submission}
+\usepackage{omg_specification}
 
 %% User added packages
 \usepackage{import}
@@ -10,8 +10,8 @@
 \newcommand{\userfiles}{./}
 \newcommand{\genfiles}{GeneratedContent/}
 
-\subimport{\userfiles}{Submission_Setup}
-\subimport{\userfiles}{Submission_AuthorSettings}
+\subimport{\userfiles}{Specification_Setup}
+\subimport{\userfiles}{Specification_AuthorSettings}
 \setvalue{\title}{\specname (\specacro) \version}
 
 \graphicspath{{../Images/}{Images/}{./\genfiles/Images/}}
@@ -186,7 +186,7 @@ The reader is encouraged to report any technical or editing issues/problems with
 
 
 %%%%%%%%% ---- Section 0
-%%%       The entirety of Section 0 is turned on and off by the initialsubmission flag in Submission_Setup.tex
+%%%       The entirety of Section 0 is turned on and off by the initialsubmission flag in Specification_Setup.tex
 \ifthenelse{\boolean{initialsubmission}}
 {
 \setcounter{chapter}{-1}
@@ -206,7 +206,7 @@ Each of the entities listed above: (i) grants to the Object Management Group, In
 
 \subsection{IPR Mode}\label{iprmode}
 \ifthenelse{\equal{\iprmode}{\xspace}}{
-\REPLACEME{<Note to Submission Editors: This Section \ref{iprmode} of your completed Submission shall specify EXACTLY ONE of the three possible IPR modes specified in the OMG IPR Policy [IPR].  Select the IPR mode using \_Submission\_Setup.tex.}
+\REPLACEME{<Note to Submission Editors: This Section \ref{iprmode} of your completed Submission shall specify EXACTLY ONE of the three possible IPR modes specified in the OMG IPR Policy [IPR].  Select the IPR mode using \_Specification\_Setup.tex.}
 
 \REPLACEME{<Option 1 - RAND mode>}}{}
 
@@ -256,7 +256,7 @@ jdoe@companyy.com
 % \setvaluelist{\testlength}{{1}, {2}, {3}}
 % \lengthETB{\testlength}
 \iffileemptyelse{\userfiles0_Submitters}
-{\REPLACEME{REQUIRED: List all organizations officially submitting this document, with contact information - name and email at a minimum - for personnel of note.  Do this by setting a value for the submitterscontactinfo macro in Submission\_Setup.tex.\suborgs}}
+{\REPLACEME{REQUIRED: List all organizations officially submitting this document, with contact information - name and email at a minimum - for personnel of note.  Do this by setting a value for the submitterscontactinfo macro in Specification\_Setup.tex.\suborgs}}
 {
     % \subimport{\userfiles}{0_Submitters}
     \suborgs
@@ -330,7 +330,7 @@ jdoe@companyy.com
 \chapter{References}
 \ifthenelse{\equal{\iprmode}{\xspace}}{\REPLACEME{A bibliography will be automatically generated for you by LaTeX and placed here.  The provided standard bibliography files (omg.bib, iso.bib, w3.bib) give you entries, you only need to cite them in your text. (See \url{https://www.overleaf.com/learn/latex/Bibliography_management_in_LaTeX\#Introduction} for extremely detailed instructions.  You only need to use the \textbf{cite} command, our templates take care of the rest.)  The labels and the bibliography will be created from what is cited, and only what is cited.  The bibliography file is a database, the citations are what pull data from it to create the References.}
 
-\REPLACEME{If you have additional bibliographic entries to add, you can place them in the submission.bib file at the top level of this project.  That is yours to fill in as you like.  See \url{https://www.overleaf.com/learn/latex/Bibliography_management_in_LaTeX\#The_bibliography_file} for instructions on how to format the information.}
+\REPLACEME{If you have additional bibliographic entries to add, you can place them in the specification.bib file at the top level of this project.  That is yours to fill in as you like.  See \url{https://www.overleaf.com/learn/latex/Bibliography_management_in_LaTeX\#The_bibliography_file} for instructions on how to format the information.}
 
 \addtocategory{normative}{MOF25, MOF251, UML251}
 \nocite{MOF25, MOF251, UML251, XMI, XMLSchema}
@@ -339,7 +339,7 @@ jdoe@companyy.com
 \defbibheading{normative}{\section{Normative References}}
 \defbibnote{normative}{The following normative documents contain provisions which, through reference in this text, constitute provisions of this specification. For dated references, subsequent amendments to, or revisions of, any of these publications do not apply.}
 \printbibliography[title={Normative References}, prenote={normative}, heading={normative}, category={normative}]
-\ifthenelse{\equal{\iprmode}{\xspace}}{\REPLACEME{See the file Submission\_AuthorSettings.tex for instructions on how to add your citations to the Normative References bibliography.}}{}
+\ifthenelse{\equal{\iprmode}{\xspace}}{\REPLACEME{See the file Specification\_AuthorSettings.tex for instructions on how to add your citations to the Normative References bibliography.}}{}
 
 \defbibheading{non-normative}{\section{Non-normative References}}
 \defbibnote{non-normative}{The following normative documents contain non-normative provisions which, through reference in this text, constitute recommendations of this specification. For dated references, subsequent amendments, or revisions, any of these publications do not apply.}
