@@ -1,5 +1,5 @@
 \ProvidesPackage{omg_submission}
-%% Template for Object Management Group (OMG) Request for Proposal (RFP) documents
+%% Template for Object Management Group (OMG) specification documents
 
 \usepackage{omg}
 
@@ -29,6 +29,9 @@
   \fancyfoot[RE,RO]{\sf\footnotesize{OMG Document \docnum}}
   \renewcommand{\headrulewidth}{0pt}
 }
+
+% If set to true, this is an initial subsmission in response to an RFP, and Section 0 is included. If it is false, Section 0 is omitted.
+\newboolean{initialsubmission}
 
 
 % TITLE PAGE DEF

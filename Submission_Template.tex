@@ -106,10 +106,10 @@ All OMG specifications are subject to continuous review and improvement. As part
 
 
 %%%%% OMG header ends here %%%%%%
+
 \tableofcontents{}
 \cleardoublepage
-%\setcounter{page}{1}
-\setcounter{chapter}{-1}
+
 %%%%% OMG Preface starts here %%%%%
 \chapter*{Preface}
 \markboth{PREFACE}{}\addcontentsline{toc}{chapter}{Preface}
@@ -176,13 +176,20 @@ elements.\\[\medskipamount]
 The reader is encouraged to report any technical or editing issues/problems with this specification to: {\url{https://www.omg.org/report\_issue.htm}}.
 \vfill\eject
 
+%%%%% OMG Preface ends here %%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Authored content begins here
+
 \pagenumbering{arabic}
 \setcounter{page}{1}
 
 
 %%%%%%%%% ---- Section 0
+%%%       The entirety of Section 0 is turned on and off by the initialsubmission flag in Submission_Setup.tex
+\ifthenelse{\boolean{initialsubmission}}
+{
+\setcounter{chapter}{-1}
 
 \chapter{Submission-Related Information}
 \section{Submission Introduction}
@@ -297,12 +304,14 @@ jdoe@companyy.com
 \iffileemptyelse{\userfiles0_Additional}{}{
     \subimport{\userfiles}{0_Additional}
 }
+} % end of then block for ifthenelse for initialsubmission
+{} % else block for ifthenelse for initialsubmission
 
-%%%%%%%%% ---- SCOPE
+%%%%%%%%% ---- 1. SCOPE
 \chapter{Scope}
 \subimport{\userfiles}{1_Scope}
 
-%%%%%%%%% ---- CONFORMANCE
+%%%%%%%%% ---- 2. CONFORMANCE
 \chapter{Conformance}
 \section{Basic Conformance}
 \subimport{\userfiles}{2_Basic_Conformance}
@@ -317,7 +326,7 @@ jdoe@companyy.com
     \subimport{\userfiles}{2_Profile_Conformance}
 }
 
-%%%%%%%%% ---- REFERENCES
+%%%%%%%%% ---- 3. REFERENCES
 \chapter{References}
 \ifthenelse{\equal{\iprmode}{\xspace}}{\REPLACEME{A bibliography will be automatically generated for you by LaTeX and placed here.  The provided standard bibliography files (omg.bib, iso.bib, w3.bib) give you entries, you only need to cite them in your text. (See \url{https://www.overleaf.com/learn/latex/Bibliography_management_in_LaTeX\#Introduction} for extremely detailed instructions.  You only need to use the \textbf{cite} command, our templates take care of the rest.)  The labels and the bibliography will be created from what is cited, and only what is cited.  The bibliography file is a database, the citations are what pull data from it to create the References.}
 
@@ -338,7 +347,7 @@ jdoe@companyy.com
 \ifthenelse{\equal{\iprmode}{\xspace}}{\REPLACEME{All citations not added to the normative category by following the directions above will end up here.}}{}
 
 
-%%%%%%%%% ---- TERMS AND DEFINITIONS
+%%%%%%%%% ---- 4. TERMS AND DEFINITIONS
 \chapter{Terms and Definitions}
 For the purposes of this specification, the following terms and definitions apply.
 
@@ -351,7 +360,7 @@ For the purposes of this specification, the following terms and definitions appl
 }
 
 
-%%%%%%%%% ---- SYMBOLS
+%%%%%%%%% ---- 5. SYMBOLS
 \chapter{Symbols}
 The following symbols and/or abbreviations are used throughout this specification.
 
@@ -365,18 +374,19 @@ The following symbols and/or abbreviations are used throughout this specificatio
     \subimport{\userfiles}{5_Symbols}
 }
 
-%%%%%%%%% ---- ADDITIONAL INFORMATION
+%%%%%%%%% ---- 6. ADDITIONAL INFORMATION
 \iffileemptyelse{\userfiles6_Additional}{}{
     \chapter{Additional Information (informative)}
     \subimport{\userfiles}{6_Additional}
 }
 
 
+%%%%%%%%% ---- 7+. Specification Content starts here
 \iffileemptyelse{\userfiles7+_Technical_Content}{}{
     \subimport{\userfiles}{7+_Technical_Content}
 }
 
-
+%%%%%%%%% ---- A+. Optional Annexes
 \iffileemptyelse{\userfiles{A_Annexes}}{}{
     \appendix
     \subimport{\userfiles}{A_Annexes}
