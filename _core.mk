@@ -6,6 +6,12 @@ rfp: ${build} rfp_core local md images
 	mv ${build}/RFP.tex ${build}/${specacro}_RFP.tex
 	cd build && latexmk -bibtex -pdf -auxdir=. -outdir=.. ./${specacro}_RFP.tex 2>&1 > /dev/null
 
+spec: ${build} ${gencondir} core local md images
+	@echo --- Creating PDF
+	mv ${build}/Specification.tex ${build}/${pdfnamebase}.tex
+	cd build && latexmk -bibtex -pdf -auxdir=. -outdir=.. ./${pdfnamebase}.tex 2>&1 > /dev/null
+
+
 # Only generate from the model if there is an appropriate ${specacro}.config file. I.e. UML.config or BPMN.config.
 gen: ${gencondir}
 	@echo --- Generating from model
@@ -43,7 +49,7 @@ local: $(subst ./,${build}/,${localtex})
 md: ${build} $(subst ./,${build}/,$(subst .md,.tex,${markdowns}))
 imagefiles := $(subst ./,${build}/,$(wildcard ./Images/*.svg))
 images: ${imagefiles}
-	echo ${imagefiles}
+# echo ${imagefiles}
 # ${build}/Images: ${build}
 # 	mkdir -p ${build}/Images
 
