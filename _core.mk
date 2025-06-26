@@ -1,4 +1,4 @@
-.PHONY: gen clean core local md images rfp
+.PHONY: gen clean core local md images rfp spec
 
 
 rfp: ${build} rfp_core local md images
