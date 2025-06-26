@@ -2,12 +2,33 @@
 \usepackage{omg_rfp}
 
 %% User added packages
-\input{_RFP_AuthorSettings}
+\usepackage{import}
+
+% Directories to find user files in, and generated content.  The latter is automatically generated from tools such as modeling tools.
+% \userfiles is relative to the directory that this file is in, or an absolute path
+% \genfiles is relative to \userfiles, or an absolute path
+\newcommand{\userfiles}{./}
+\newcommand{\genfiles}{GeneratedContent/}
+
+\subimport{\userfiles}{_RFP_Setup}
+\subimport{\userfiles}{_RFP_AuthorSettings}
+
+\graphicspath{{../Images/}{Images/}{./\genfiles/Images/}}
+
+\setvalue{\title}{\specname (\specacro)}
+
+\hypersetup{
+    pdfauthor ={\pdfauthor},
+    pdftitle ={\title},
+    pdfsubject ={\title},
+    pdfcreator ={\copyrightomg},
+    pdfproducer ={LaTeX}
+}
 
 %% Start of content
 \begin{document}
 
-\input{_RFP_Setup}
+
 \maketitle
 \thispagestyle{fancy}
 
