@@ -1,4 +1,10 @@
-.PHONY: gen clean core local md
+.PHONY: gen clean core local md images rfp
+
+
+rfp: ${build} rfp_core local md images
+	@echo --- Creating PDF
+	mv ${build}/RFP.tex ${build}/${specacro}_RFP.tex
+	cd build && latexmk -bibtex -pdf -auxdir=. -outdir=.. ./${specacro}_RFP.tex 2>&1 > /dev/null
 
 # Only generate from the model if there is an appropriate ${specacro}.config file. I.e. UML.config or BPMN.config.
 gen: ${gencondir}
@@ -24,13 +30,23 @@ ${build}:
 ${build}/GeneratedContent: ${build}
 	cp -R ./GeneratedContent "${build}/GeneratedContent"
 
+
 # LaTeX files support (local and core)
-coretex := $(wildcard mdsa-omg-core/*.tex) $(wildcard mdsa-omg-core/*.sty) $(wildcard mdsa-omg-core/*.bib)
+coretex := $(wildcard mdsa-omg-core/*.sty) $(wildcard mdsa-omg-core/*.bib) 
+#$(wildcard mdsa-omg-core/*.tex) 
 localtex := $(wildcard ./*.tex) $(wildcard ./*.bib)
 markdowns := $(filter-out ./README.md, $(wildcard ./*.md))
-core: $(subst mdsa-omg-core,${build},${coretex})
+core: $(subst mdsa-omg-core,${build},${coretex} $(wildcard mdsa-omg-core/*.tex) )
+rfp_core: $(subst mdsa-omg-core,${build},$(wildcard mdsa-omg-core/RFP*) ${coretex})
+spec_core: $(subst mdsa-omg-core,${build},$(wildcard mdsa-omg-core/*pecification*) ${coretex})
 local: $(subst ./,${build}/,${localtex}) 
 md: ${build} $(subst ./,${build}/,$(subst .md,.tex,${markdowns}))
+imagefiles := $(subst ./,${build}/,$(wildcard ./Images/*.svg))
+images: ${imagefiles}
+	echo ${imagefiles}
+# ${build}/Images: ${build}
+# 	mkdir -p ${build}/Images
+
 
 # Order of rules is important. This order allows local .tex files to override core .tex files, 
 # and local .md files to override both
@@ -60,4 +76,7 @@ ${build}/%.bib: mdsa-omg-core/%.bib
 ${build}/%.bib: ./%.bib
 	cp $< $@
 
-
+# SVG is the only format formally accepted by OMG for documents
+${build}/Images/%.svg: ./Images/%.svg
+	echo $<
+	cp $< $0
