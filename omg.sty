@@ -163,6 +163,10 @@
 }
 \makeatother
 
+% Pandoc Markdown -> LaTeX support
+% \newcommand{\passthrough}[1]{#1}
+\newcommand{\passthrough}[1]{\lstset{mathescape=false}#1\lstset{mathescape=true}} 
+
 
 \usepackage{expl3}
 \usepackage{xparse}
