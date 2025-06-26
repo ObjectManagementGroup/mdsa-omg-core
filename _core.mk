@@ -3,8 +3,8 @@
 
 rfp: ${build} rfp_core local md images
 	@echo --- Creating PDF
-	mv ${build}/RFP.tex ${build}/${specacro}_RFP.tex
-	cd build && latexmk -bibtex -pdf -auxdir=. -outdir=.. ./${specacro}_RFP.tex 2>&1 > /dev/null
+	mv ${build}/RFP.tex ${build}/${pdfnamebase}.tex
+	cd build && latexmk -bibtex -pdf -auxdir=. -outdir=.. ./${pdfnamebase}.tex 2>&1 > /dev/null
 
 # Only generate from the model if there is an appropriate ${specacro}.config file. I.e. UML.config or BPMN.config.
 gen: ${gencondir}
@@ -21,7 +21,7 @@ ${gencondir}:
 clean:
 	@echo --- Cleaning
 	rm -rf build/
-	rm -f "${pdfname}"
+	rm -f "${pdfnamebase}.pdf"
 
 ${build}:
 	mkdir -p "${build}"
