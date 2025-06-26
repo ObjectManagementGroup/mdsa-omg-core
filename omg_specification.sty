@@ -86,8 +86,9 @@
 \newcommand{\titlesubmitters}{\forlistloop{\titlesubhelper}{\authornames}}
 
 %%% Copyright block tools
-\newcommand{\Copyright}{Copyright\ \ \copyright\,2019,}
+\newcommand{\Copyright}{Copyright\ \ \copyright\,\the\year,}
 \newcommand{\copyrightomg}{\Copyright\ \ Object Management Group, Inc.}
+
 % Do not remove the explicit newline here, \\, \newline, and \linebreak all
 % cause a 'No line here to end' error.
 \newcommand{\copyrighthelper}[1]{\Copyright\ \ #1\\}
