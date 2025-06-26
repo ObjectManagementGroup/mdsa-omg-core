@@ -11,7 +11,6 @@ spec: ${build} ${gencondir} core local md images
 	mv ${build}/Specification.tex ${build}/${pdfnamebase}.tex
 	cd build && latexmk -bibtex -pdf -auxdir=. -outdir=.. ./${pdfnamebase}.tex 2>&1 > /dev/null
 
-
 # Only generate from the model if there is an appropriate ${specacro}.config file. I.e. UML.config or BPMN.config.
 gen: ${gencondir}
 	@echo --- Generating from model
