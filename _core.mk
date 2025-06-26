@@ -1,15 +1,19 @@
-.PHONY: gen clean core local md images rfp spec
+.PHONY: gen clean core local md images rfp spec debug
 
+# Target 'debug' re-enables output from LaTeX run
+_outputstream := 2>&1 > /dev/null
+debug: _outputstream := ""
+debug: all
 
 rfp: ${build} rfp_core local md images
 	@echo --- Creating PDF
 	mv ${build}/RFP.tex ${build}/${pdfnamebase}.tex
-	cd build && latexmk -bibtex -pdf -auxdir=. -outdir=.. ./${pdfnamebase}.tex 2>&1 > /dev/null
+	cd build && latexmk -bibtex -pdf -auxdir=. -outdir=.. ./${pdfnamebase}.tex ${_outputstream}
 
 spec: ${build} ${gencondir} core local md images
 	@echo --- Creating PDF
 	mv ${build}/Specification.tex ${build}/${pdfnamebase}.tex
-	cd build && latexmk -bibtex -pdf -auxdir=. -outdir=.. ./${pdfnamebase}.tex 2>&1 > /dev/null
+	cd build && latexmk -bibtex -pdf -auxdir=. -outdir=.. ./${pdfnamebase}.tex ${_outputstream}
 
 # Only generate from the model if there is an appropriate ${specacro}.config file. I.e. UML.config or BPMN.config.
 gen: ${gencondir}
