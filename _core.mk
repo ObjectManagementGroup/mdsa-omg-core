@@ -12,14 +12,19 @@ debug: all
 build ?= ./build
 source ?= /source
 
-rfp: "${build}" rfp_core local md images
+specacro = $(shell specsetup --lookup specacro --setupFile "${source}/_${doc}_Setup.tex")
+version  = $(shell specsetup --lookup version --setupFile "${source}/_${doc}_Setup.tex")
+
+rfp: doc="RFP"
+rfp: "${build}" tools rfp_core local md images
 	@echo --- Creating PDF
-	mv "${build}/RFP.tex" "${build}/${pdfnamebase}.tex"
+	mv "${build}/${doc}.tex" "${build}/${pdfnamebase}.tex"
 	cd "${build}" && latexmk -bibtex -pdf -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
 
-spec: "${build}" ${gencondir} core local md images
-	@echo --- Creating PDF
-	mv "${build}/Specification.tex" "${build}/${pdfnamebase}.tex"
+spec: doc="Specification"
+spec: ${build} tools ${gencondir} core local md images 
+	@echo --- Creating PDF ;
+	mv "${build}/${doc}.tex" "${build}/${pdfnamebase}.tex" ;
 	cd "${build}" && latexmk -bibtex -pdf -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
 
 # Only generate from the model if there is an appropriate ${specacro}.config file. I.e. UML.config or BPMN.config.
@@ -33,6 +38,13 @@ gen: ${gencondir}
 
 ${gencondir}:
 	mkdir -p "${gencondir}"
+
+specsetupfile := $(shell command -v specsetup 2> /dev/null)
+
+tools:
+ifndef specsetupfile
+	cd ./mdsa-tools ; pip install -e .
+endif
 
 clean:
 	@echo --- Cleaning
