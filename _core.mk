@@ -5,7 +5,7 @@ SHELL := /bin/bash
 
 # Target 'debug' re-enables output from LaTeX run
 _outputstream := 2>&1 > /dev/null
-debug: _outputstream := ""
+debug: _outputstream := 
 debug: all
 
 # Set if not set in Makefile for local LaTeX installation
@@ -19,12 +19,14 @@ rfp: doc="RFP"
 rfp: "${build}" tools rfp_core local md images
 	@echo --- Creating PDF
 	mv "${build}/${doc}.tex" "${build}/${pdfnamebase}.tex"
+	cp ./.latexmkrc "${build}/.latexmkrc" ;
 	cd "${build}" && latexmk -bibtex -pdf -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
 
 spec: doc="Specification"
-spec: ${build} tools ${gencondir} core local md images 
+spec: "${build}" tools ${gencondir} core local md images 
 	@echo --- Creating PDF ;
 	mv "${build}/${doc}.tex" "${build}/${pdfnamebase}.tex" ;
+	cp ./.latexmkrc "${build}/.latexmkrc" ;
 	cd "${build}" && latexmk -bibtex -pdf -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
 
 # Only generate from the model if there is an appropriate ${specacro}.config file. I.e. UML.config or BPMN.config.
