@@ -47,8 +47,8 @@
 % Rescales images to fit in text height/width
 % Fix for Pandoc 3.2.1 issue #391:
 % https://github.com/Wandmalfarbe/pandoc-latex-template/issues/391
+\makeatletter
 \newsavebox\pandoc@box
-
 \newcommand*\pandocbounded[1]{
   \sbox\pandoc@box{#1}%
   \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
