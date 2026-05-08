@@ -23,14 +23,14 @@ rfp: "${build}" tools rfp_core local md images
 	cd "${build}" && latexmk -bibtex -pdf -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
 
 spec: doc="Specification"
-spec: "${build}" tools ${gencondir} core local md images 
+spec: "${build}" tools "${gencondir}" core local md images 
 	@echo --- Creating PDF ;
 	mv "${build}/${doc}.tex" "${build}/${pdfnamebase}.tex" ;
 	cp ./.latexmkrc "${build}/.latexmkrc" ;
 	cd "${build}" && latexmk -bibtex -pdf -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
 
 # Only generate from the model if there is an appropriate ${specacro}.config file. I.e. UML.config or BPMN.config.
-gen: ${gencondir}
+gen: "${gencondir}"
 	@echo --- Generating from model
 	@if [ -f "${specacro}.config" ]; then \
 		./mdsa-tools/omgmdsa/md2LaTeX.py --config "${specacro}.config"; \
@@ -38,9 +38,10 @@ gen: ${gencondir}
 		echo "[MDSA] No "${specacro}.config" file, not building from model"; \
 	fi
 
-${gencondir}:
+"${gencondir}":
 	mkdir -p "${gencondir}"
 
+# Checks to see if specsetupfile is installed correctly
 specsetupfile := $(shell command -v specsetup 2> /dev/null)
 
 tools:
@@ -53,11 +54,11 @@ clean:
 	rm -rf "${build}"
 	rm -f "${pdfnamebase}.pdf"
 
-${build}:
+"${build}":
 	mkdir -p "${build}"
 
 # This is a raw copy, it could be smarter, but this is sufficiently fast
-${build}/GeneratedContent: ${build}
+"${build}/GeneratedContent": "${build}"
 	cp -R "${source}/GeneratedContent" "${build}/GeneratedContent"
 
 
