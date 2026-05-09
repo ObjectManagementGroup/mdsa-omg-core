@@ -19,14 +19,16 @@ rfp: doc="RFP"
 rfp: "${build}" tools rfp_core local md images
 	@echo --- Creating PDF
 	mv "${build}/${doc}.tex" "${build}/${pdfnamebase}.tex"
-	cp ./.latexmkrc "${build}/.latexmkrc" ;
+	cp "${source}/.latexmkrc" "${build}/.latexmkrc"  2>/dev/null ;
+	touch "${build}/.latexmkrc" 2>/dev/null ;
 	cd "${build}" && latexmk -bibtex -pdf -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
 
 spec: doc="Specification"
 spec: "${build}" tools "${gencondir}" core local md images 
 	@echo --- Creating PDF ;
 	mv "${build}/${doc}.tex" "${build}/${pdfnamebase}.tex" ;
-	cp ./.latexmkrc "${build}/.latexmkrc" ;
+	cp "${source}/.latexmkrc" "${build}/.latexmkrc"  2>/dev/null ;
+	touch "${build}/.latexmkrc" 2>/dev/null ;
 	cd "${build}" && latexmk -bibtex -pdf -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
 
 # Only generate from the model if there is an appropriate ${specacro}.config file. I.e. UML.config or BPMN.config.
