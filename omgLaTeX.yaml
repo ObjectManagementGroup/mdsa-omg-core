@@ -23,12 +23,13 @@ listings: true
 
 # Numbered cross-references (@sec:id, @fig:id, @tbl:id) with pandoc-crossref,
 # which is included in the pandoc/latex Docker images. It must run before
-# citations are processed. gfm-heading-links.lua makes links to headings written
-# for GitHub ([Figures](#figures)) work in the PDF; ${.} is the folder of this
-# file in the build folder, where the filter is copied to.
+# citations are processed. gfm-heading-links.lua, which must run before it, makes
+# links to headings written for GitHub work in the PDF: [@sec:types](#types) is a
+# link on GitHub and "Section 5.2.4" in the PDF, [Types](#types) a link in both.
+# ${.} is the folder of this file in the build folder, where the filter is copied.
 filters:
-  - pandoc-crossref
   - ${.}/gfm-heading-links.lua
+  - pandoc-crossref
 
 # Citations ([@DMN16]) become biblatex \autocite commands, matching the biblatex
 # setup (style=alphabetic) of the MDSA templates.
