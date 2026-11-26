@@ -205,11 +205,11 @@ The reader is encouraged to report any technical or editing issues/problems with
 \chapter{Submission-Related Information}
 \section{Submission Introduction}
 %\expandafter
-\iffileemptyelse{\userfiles0_Introduction}{
+\iffileemptyelse{\userfiles00_Introduction}{
     \REPLACEME{Fill in file 0\_Introduction.tex to provide an introduction to this submission, providing scope, history, etc.}%
 }{
-%    \subimport{\userfiles}{0_Introduction}
-    \subimport{\userfiles}{0_Introduction}
+%    \subimport{\userfiles}{00_Introduction}
+    \subimport{\userfiles}{00_Introduction}
 }
 
 \subsection{Copyright Waiver}
@@ -266,75 +266,75 @@ jdoe@companyy.com
 }
 % \setvaluelist{\testlength}{{1}, {2}, {3}}
 % \lengthETB{\testlength}
-\iffileemptyelse{\userfiles0_Submitters}
+\iffileemptyelse{\userfiles00_Submitters}
 {\REPLACEME{REQUIRED: List all organizations officially submitting this document, with contact information - name and email at a minimum - for personnel of note.  Do this by setting a value for the submitterscontactinfo macro in Specification\_Setup.tex.\suborgs}}
 {
-    % \subimport{\userfiles}{0_Submitters}
+    % \subimport{\userfiles}{00_Submitters}
     \suborgs
 }
 
 
-\iffileemptyelse{\userfiles0_Acknowledgements}{}{
+\iffileemptyelse{\userfiles00_Acknowledgements}{}{
     \subsection{Acknowledgements}
-    \subimport{\userfiles}{0_Acknowledgements}
+    \subimport{\userfiles}{00_Acknowledgements}
 }
 
 \section{Resolution of Mandatory Requirements} 
-\iffileemptyelse{\userfiles0_Resolutions_Mandatory}{
+\iffileemptyelse{\userfiles00_Resolutions_Mandatory}{
     \REPLACEME{Fill in file 0\_Resolutions\_Mandatory.tex to discuss how this submission addresses each mandatory requirement from the RFP.}%
 }{
-    \subimport{\userfiles}{0_Resolutions_Mandatory}
+    \subimport{\userfiles}{00_Resolutions_Mandatory}
 }
 
-\iffileemptyelse{\userfiles0_Resolutions_Optional}{}{
+\iffileemptyelse{\userfiles00_Resolutions_Optional}{}{
     \section{Resolution of Optional Requirements}
-    \subimport{\userfiles}{0_Resolutions_Optional}
+    \subimport{\userfiles}{00_Resolutions_Optional}
 }
 
 
-\iffileemptyelse{\userfiles0_Issues}{}{
+\iffileemptyelse{\userfiles00_Issues}{}{
     \section{Issues to be Discussed}
-    \subimport{\userfiles}{0_Issues}
+    \subimport{\userfiles}{00_Issues}
 }
 
-\iffileemptyelse{\userfiles0_Proof_Of_Concept}{}{
+\iffileemptyelse{\userfiles00_Proof_Of_Concept}{}{
     \section{Proof of Concept}
-    \subimport{\userfiles}{0_Proof_Of_Concept}
+    \subimport{\userfiles}{00_Proof_Of_Concept}
 }
 
 \section{Changes to Existing OMG Specifications}
-\iffileemptyelse{\userfiles0_Changes_To_Existing}{No changes are suggested or required.}{
-    \subimport{\userfiles}{0_Changes_To_Existing}
+\iffileemptyelse{\userfiles00_Changes_To_Existing}{No changes are suggested or required.}{
+    \subimport{\userfiles}{00_Changes_To_Existing}
 }
 
-\iffileemptyelse{\userfiles0_Relation_To_Existing}{}{
+\iffileemptyelse{\userfiles00_Relation_To_Existing}{}{
     \section{Relation to Existing Specifications}
-    \subimport{\userfiles}{0_Relation_To_Existing}
+    \subimport{\userfiles}{00_Relation_To_Existing}
 }
 
-\iffileemptyelse{\userfiles0_Additional}{}{
-    \subimport{\userfiles}{0_Additional}
+\iffileemptyelse{\userfiles00_Additional}{}{
+    \subimport{\userfiles}{00_Additional}
 }
 } % end of then block for ifthenelse for initialsubmission
 {} % else block for ifthenelse for initialsubmission
 
 %%%%%%%%% ---- 1. SCOPE
 \chapter{Scope}
-\subimport{\userfiles}{1_Scope}
+\subimport{\userfiles}{01_Scope}
 
 %%%%%%%%% ---- 2. CONFORMANCE
 \chapter{Conformance}
 \section{Basic Conformance}
-\subimport{\userfiles}{2_Basic_Conformance}
+\subimport{\userfiles}{02_Basic_Conformance}
 
-\iffileemptyelse{\userfiles2_Extended_Conformance}{}{
+\iffileemptyelse{\userfiles02_Extended_Conformance}{}{
     \section{Extended Conformance}
-    \subimport{\userfiles}{2_Extended_Conformance}
+    \subimport{\userfiles}{02_Extended_Conformance}
 }
 
-\iffileemptyelse{\userfiles2_Profile_Conformance}{}{
+\iffileemptyelse{\userfiles02_Profile_Conformance}{}{
     \section{Profile Conformance}
-    \subimport{\userfiles}{2_Profile_Conformance}
+    \subimport{\userfiles}{02_Profile_Conformance}
 }
 
 %%%%%%%%% ---- 3. REFERENCES
@@ -362,12 +362,12 @@ jdoe@companyy.com
 \chapter{Terms and Definitions}
 For the purposes of this specification, the following terms and definitions apply.
 
-\iffileemptyelse{\userfiles4_Terms}{
+\iffileemptyelse{\userfiles04_Terms}{
     \ifthenelse{\equal{\iprmode}{\xspace}}
     {\REPLACEME{SET YOUR IPR MODE}}
     {None.}
 }{
-    \subimport{\userfiles}{4_Terms}
+    \subimport{\userfiles}{04_Terms}
 }
 
 
@@ -375,26 +375,26 @@ For the purposes of this specification, the following terms and definitions appl
 \chapter{Symbols}
 The following symbols and/or abbreviations are used throughout this specification.
 
-\iffileemptyelse{\userfiles5_Symbols}{
+\iffileemptyelse{\userfiles05_Symbols}{
     \ifthenelse{\equal{\iprmode}{\xspace}}
     {
         \REPLACEME{Fill in the file 5\_Symbols.tex with a table or images as you see fit.  If you have no symbols to define, you may leave the file empty, or delete it.}
     }
     {None.}
 }{
-    \subimport{\userfiles}{5_Symbols}
+    \subimport{\userfiles}{05_Symbols}
 }
 
 %%%%%%%%% ---- 6. ADDITIONAL INFORMATION
-\iffileemptyelse{\userfiles6_Additional}{}{
+\iffileemptyelse{\userfiles06_Additional}{}{
     \chapter{Additional Information (informative)}
-    \subimport{\userfiles}{6_Additional}
+    \subimport{\userfiles}{06_Additional}
 }
 
 
 %%%%%%%%% ---- 7+. Specification Content starts here
-\iffileemptyelse{\userfiles7+_Technical_Content}{}{
-    \subimport{\userfiles}{7+_Technical_Content}
+\iffileemptyelse{\userfiles07+_Technical_Content}{}{
+    \subimport{\userfiles}{07+_Technical_Content}
 }
 
 %%%%%%%%% ---- A+. Optional Annexes

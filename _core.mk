@@ -1,4 +1,4 @@
-.PHONY: gen clean core local md images rfp spec debug check
+.PHONY: gen clean core local md images rfp spec debug check clauses
 
 # Several things break if only plain sh is used
 SHELL := /bin/bash
@@ -27,12 +27,32 @@ rfp: "${build}" tools rfp_core local md images
 	cd "${build}" && max_print_line=10000 latexmk -bibtex -pdf -shell-escape -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
 
 spec: doc="Specification"
-spec: "${build}" tools "${gencondir}" core local md images 
+spec: "${build}" tools "${gencondir}" core local md images clauses
 	@echo --- Creating PDF ;
 	mv "${build}/${doc}.tex" "${build}/${pdfnamebase}.tex" ;
 	if [ -f "${source}/.latexmkrc" ]; then cp "${source}/.latexmkrc" "${build}/.latexmkrc" ; fi
 	touch "${build}/.latexmkrc" 2>/dev/null ;
 	cd "${build}" && max_print_line=10000 latexmk -bibtex -pdf -shell-escape -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
+
+# Clause files have zero-padded names, so that they sort in clause order: 00_* for the
+# submission clause, 01_Scope to 06_Additional, then one file per clause from Clause 7
+# on (07_Title, 08_Title, ...), and A_Annexes.
+# - Unpadded names of older specifications (1_Scope, 7+_Technical_Content, ...) are
+#   copied to the padded names the templates use, so they keep working.
+# - Clause 7 and later: every file 07_* to 99_* is included in name order, unless the
+#   specification has its own 07+_Technical_Content (or 7+_Technical_Content) with an
+#   explicit list.
+clauses: local md
+	@cd "${build}" && \
+	for f in [0-7]_*.tex 7+_*.tex ; do \
+		if [ -e "$$f" ] && [ ! -e "0$$f" ] ; then cp "$$f" "0$$f" ; fi ; \
+	done ; \
+	if [ ! -e 07+_Technical_Content.tex ] ; then \
+		for f in $$(ls [0-9][0-9]_*.tex 2>/dev/null | sort) ; do \
+			case "$$f" in 0[0-6]_*) ;; *) echo "\\subimport{}{$${f%.tex}}" ;; esac ; \
+		done > 07+_Technical_Content.tex ; \
+		echo "--- Clauses from 7 on: $$(grep -c subimport 07+_Technical_Content.tex) files" ; \
+	fi
 
 # Build, then check for problems that LaTeX does not treat as errors (undefined
 # references and citations, unprocessed Markdown references). Fails if any are found.

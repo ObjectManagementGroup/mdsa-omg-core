@@ -19,7 +19,7 @@ table-caption-position: below
 figure-caption-position: below
 # The templates use the report class: clauses are chapters. In every Markdown
 # file, '#' is a clause (e.g. 7), '##' a subclause (7.1), and so on. Files whose
-# clause heading comes from the template (e.g. 1_Scope.md) start with '##'.
+# clause heading comes from the template (e.g. 01_Scope.md) start with '##'.
 # RFP builds use 'section' instead (see the rfp target in _core.mk).
 top-level-division: chapter
 number-sections: true
