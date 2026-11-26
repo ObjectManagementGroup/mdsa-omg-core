@@ -23,12 +23,13 @@ listings: true
 
 # Numbered cross-references with pandoc-crossref, which is included in the
 # pandoc/latex Docker images. It must run before citations are processed.
-# section-links.lua, which runs before it, turns links to headings written as on
-# GitHub ([Types](#types), [Types](05_Object_Model.md#types)) into numbered
-# references ("5.2.4", "Clause 5", "Annex A"). ${.} is the folder of this file
-# in the build folder, where the filter is copied to.
+# crossref-links.lua, which runs before it, turns ordinary Markdown links, as on
+# GitHub, into numbered references: links to headings ("5.2.4", "Clause 5",
+# "Annex A"), to images of figures ("Figure 7.1"), and to "###### Table: Caption"
+# headings, which become the captions of the tables below them ("Table 7.1").
+# ${.} is the folder of this file in the build folder, where the filter is copied.
 filters:
-  - ${.}/section-links.lua
+  - ${.}/crossref-links.lua
   - pandoc-crossref
 
 # Citations ([@DMN16]) become biblatex \autocite commands, matching the biblatex
