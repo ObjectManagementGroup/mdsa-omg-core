@@ -22,14 +22,19 @@
 -- GitHub shows the link text and follows the link; the PDF shows the generated
 -- number instead, so the text around a link must read well with either.
 --
--- How: headings get GitHub's identifiers (gfm_auto_identifiers), which
--- pandoc-crossref prefixes with "sec:" (autoSectionLabels). This filter runs
--- before pandoc-crossref. It gives each figure the identifier fig:<image file
--- name>, turns each table caption heading into the caption of its table with
--- the identifier tbl:<heading identifier>, and turns each link into the
--- matching reference (@fig:..., @tbl:..., [-@sec:...]). References written
--- directly as @sec:..., @fig:..., @tbl:... and {#fig:...}/{#tbl:...} labels
--- keep working; section references are shown without "Section" as above.
+-- How: headings get GitHub's identifiers (gfm_auto_identifiers). This filter
+-- runs before pandoc-crossref and
+-- - labels each heading sec:<file>--<identifier>, so that headings with the
+--   same title in different files (e.g. "Overview") do not collide; within a
+--   file, GitHub and pandoc number repeated titles (overview, overview-1)
+-- - labels each figure fig:<image file name>
+-- - turns each table caption heading into the caption of its table, labelled
+--   tbl:<file>--<heading identifier>
+-- - turns each link into the matching reference (@fig:..., @tbl:...,
+--   [-@sec:...]), which pandoc-crossref numbers.
+-- References written directly as @sec:<identifier>, @fig:..., @tbl:... and
+-- {#sec:...}/{#fig:...}/{#tbl:...} labels keep working; section references are
+-- shown without "Section" as above.
 --
 -- Warnings (the link is still converted, or left as it is):
 -- - the link text is not the title or caption of its target
@@ -43,12 +48,55 @@ local READER = 'markdown+gfm_auto_identifiers+lists_without_preceding_blankline'
 
 local IMAGE = { svg = true, png = true, jpg = true, jpeg = true, gif = true, pdf = true }
 
+local own, others = nil, {}
+
 local this_file = PANDOC_STATE.input_files[1] or ''
 local this_name = this_file:match('([^/]*)$')
 local folder = this_file:match('^(.*/)') or ''
 
-local function warn(msg, ...)
-  io.stderr:write(('[crossref-links] %s: ' .. msg .. '\n'):format(this_name, ...))
+-- Label prefix of a file: 07_Main.md -> 07_main
+local function file_key(name)
+  return (name:gsub('%.md$', ''):lower():gsub('[^%w_]', '-'))
+end
+
+local function section_label(name, anchor)
+  return 'sec:' .. file_key(name) .. '--' .. anchor
+end
+
+local function table_label(name, anchor)
+  return 'tbl:' .. file_key(name) .. '--' .. anchor
+end
+
+-- Line of the first occurrence of a text in this file, for warnings
+local source_lines
+local function line_of(needles)
+  if type(needles) == 'string' then needles = { needles } end
+  if not source_lines then
+    source_lines = {}
+    local f = io.open(this_file, 'r')
+    if f then
+      for line in f:lines() do table.insert(source_lines, line) end
+      f:close()
+    end
+  end
+  for _, needle in ipairs(needles) do
+    for n, line in ipairs(source_lines) do
+      if line:find(needle, 1, true) then return n end
+    end
+  end
+end
+
+-- Warning on stderr; in GitHub Actions also as an annotation on the line
+local annotate = os.getenv('GITHUB_ACTIONS') == 'true'
+local function warn(needle, msg, ...)
+  msg = msg:format(...)
+  local line = needle and line_of(needle)
+  io.stderr:write(('[crossref-links] %s%s: %s\n')
+    :format(this_name, line and (':' .. line) or '', msg))
+  if annotate then
+    io.stderr:write(('::warning file=%s%s,title=Link::%s\n')
+      :format(this_name, line and (',line=' .. line) or '', msg))
+  end
 end
 
 local stringify = pandoc.utils.stringify
@@ -107,14 +155,22 @@ local function file_index(name)
   return files[name]
 end
 
--- Caption of the figure that shows an image, searched in all Markdown files
-local function figure_caption(name)
+-- All Markdown files of the specification, this one first
+local function all_files()
+  local names = { this_name }
   local ok, entries = pcall(pandoc.system.list_directory, folder == '' and '.' or folder)
   for _, entry in ipairs(ok and entries or {}) do
-    if entry:match('%.md$') then
-      local idx = file_index(entry)
-      if idx and idx.figures[name] then return idx.figures[name] end
-    end
+    if entry:match('%.md$') and entry ~= this_name then table.insert(names, entry) end
+  end
+  table.sort(names, function(a, b) return a == this_name or (b ~= this_name and a < b) end)
+  return names
+end
+
+-- Caption of the figure that shows an image, searched in all Markdown files
+local function figure_caption(name)
+  for _, entry in ipairs(all_files()) do
+    local idx = entry == this_name and own or file_index(entry)
+    if idx and idx.figures[name] then return idx.figures[name] end
   end
   return nil
 end
@@ -129,7 +185,7 @@ local function check_text(el, title, what)
   if #el.content == 1 and el.content[1].t == 'Cite' then return end -- [@sec:x](#x)
   local text = stringify(el.content)
   if normalize(text) ~= normalize(title) then
-    warn('link text "%s" is not the %s "%s"', text, what, title)
+    warn({ text .. '](' .. el.target, '](' .. el.target }, 'link text "%s" is not the %s "%s"', text, what, title)
   end
 end
 
@@ -146,8 +202,6 @@ local function section_reference(id, level, annex)
   return ref
 end
 
-local own, others = nil, {}
-
 local function link(el)
   local target = el.target
   if target:match('^%a[%w+.-]*:') or target:match('^//') then return nil end -- URL
@@ -161,13 +215,13 @@ local function link(el)
     if caption then
       check_text(el, caption, 'figure caption')
     else
-      warn('link to "%s": no figure shows this image', target)
+      warn('](' .. target, 'link to "%s": no figure shows this image', target)
     end
     return cite('fig:' .. name)
   end
 
   if file ~= '' and not file:match('%.md$') then
-    warn('link to "%s" cannot be followed in the PDF; is it a citation?', target)
+    warn('](' .. target, 'link to "%s" cannot be followed in the PDF; is it a citation?', target)
     return nil
   end
   if anchor:find(':', 1, true) then return nil end -- e.g. #fig:x, written for the PDF
@@ -180,7 +234,7 @@ local function link(el)
   else
     idx = file_index(name)
     if not idx then
-      warn('link to "%s": file not found', target)
+      warn('](' .. target, 'link to "%s": file not found', target)
       return nil
     end
     if anchor == '' then anchor = idx.first or '' end
@@ -188,15 +242,15 @@ local function link(el)
 
   local h = idx.headings[anchor]
   if not h then
-    warn('link to "%s": no such heading or table', target)
-    return section_reference('sec:' .. anchor)
+    warn('](' .. target, 'link to "%s": no such heading or table', target)
+    return section_reference(section_label(name, anchor))
   end
   if h.table then
     check_text(el, h.title, 'table caption')
-    return cite('tbl:' .. anchor)
+    return cite(table_label(name, anchor))
   end
   check_text(el, h.title, 'heading title')
-  return section_reference('sec:' .. anchor, h.level, name:match('^A_') ~= nil)
+  return section_reference(section_label(name, anchor), h.level, name:match('^A_') ~= nil)
 end
 
 -- Table caption headings become the captions of their tables
@@ -209,7 +263,7 @@ local function blocks(list)
     if caption and list[i + 1] and list[i + 1].t == 'Table' then
       local tbl = list[i + 1]
       if #tbl.caption.long > 0 then
-        warn('table "%s" has a caption heading and a "Table:" caption line', caption)
+        warn(caption, 'table "%s" has a caption heading and a "Table:" caption line', caption)
       end
       -- the caption is the heading text without "Table:" and the space after it
       local inlines = el.content:clone()
@@ -221,13 +275,13 @@ local function blocks(list)
         end
       end
       tbl.caption.long = pandoc.Blocks({ pandoc.Plain(inlines) })
-      tbl.identifier = 'tbl:' .. el.identifier
+      tbl.identifier = table_label(this_name, el.identifier)
       out:insert(tbl)
       i = i + 2
       changed = true
     else
       if caption then
-        warn('heading "%s" is not directly followed by a table', stringify(el.content))
+        warn(stringify(el.content), 'heading "%s" is not directly followed by a table', stringify(el.content))
       end
       out:insert(el)
       i = i + 1
@@ -247,12 +301,29 @@ local function figure(el)
   end
 end
 
--- @sec:types written directly: number only, as for links
+-- Headings are labelled sec:<file>--<identifier>
+local function header(el)
+  if el.identifier ~= '' and not el.identifier:find(':', 1, true) then
+    el.identifier = section_label(this_name, el.identifier)
+    return el
+  end
+end
+
+-- @sec:types written directly: the label of that heading in this or another
+-- file, shown as its number only, as for links
 local function section_cite(el)
   for _, c in ipairs(el.citations) do
-    if c.id:match('^sec:') and c.mode ~= 'SuppressAuthor' then
-      c.mode = 'SuppressAuthor'
+    local anchor = c.id:match('^sec:(.+)$')
+    if anchor and not anchor:find('--', 1, true) then
+      for _, name in ipairs(all_files()) do
+        local idx = name == this_name and own or file_index(name)
+        if idx and idx.headings[anchor] and not idx.headings[anchor].table then
+          c.id = section_label(name, anchor)
+          break
+        end
+      end
     end
+    if anchor and c.mode ~= 'SuppressAuthor' then c.mode = 'SuppressAuthor' end
   end
   return el
 end
@@ -273,4 +344,5 @@ function Pandoc(doc)
             :walk({ Cite = section_cite })
             :walk({ Figure = figure })
             :walk({ Blocks = blocks })
+            :walk({ Header = header })
 end

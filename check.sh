@@ -16,21 +16,33 @@ fi
 
 # 1. Unresolved references and citations, links to missing targets ('Hyper
 #    reference'), duplicate labels (show as "??", bold keys or dead links in the PDF)
-if grep -E "(Reference|reference|Citation) .* undefined|multiply defined" "$log"; then
+problems=$(grep -E "(Reference|reference|Citation) .* undefined|multiply defined" "$log")
+if [ -n "$problems" ]; then
+  echo "$problems"
+  if [ "$GITHUB_ACTIONS" = true ]; then
+    echo "$problems" | sed -E 's/^(LaTeX Warning: )?/::error title=make check::/'
+  fi
   echo "[check] FAILED: undefined references or citations, or duplicate labels (see above)"
   status=1
 fi
 
 # 2. Markdown references that pandoc did not process, e.g. because pandoc-crossref
-#    did not run. Code (\lstinline!...! and lstlisting blocks) is ignored, since
-#    it may show the syntax on purpose.
+#    did not run. Code (code blocks, inline code) is ignored, since it may show
+#    the syntax on purpose.
 for tex in "$@"; do
   [ -f "$tex" ] || continue
-  hits=$(awk '/\\begin\{lstlisting\}/{code=1} !code{print FILENAME": "FNR": "$0} /\\end\{lstlisting\}/{code=0}' "$tex" \
-    | sed -E 's/\\lstinline!([^!]*)!//g' \
-    | grep -E '@(sec|fig|tbl|eq|lst):|\{\[\}@')
+  hits=$(perl -0777 -ne '
+    s/\\begin\{(lstlisting|Shaded|verbatim|Verbatim)\}.*?\\end\{\1\}//gs;
+    s/\\lstinline!([^!]*)!//g;
+    s/\\(?:texttt|passthrough)(\{(?:[^{}]++|(?1))*\})//g;
+    print "$ARGV: $&\n" while /^.*(?:\@(?:sec|fig|tbl|eq|lst):|\{\[\}\@).*$/mg;
+  ' "$tex")
   if [ -n "$hits" ]; then
     echo "$hits"
+    if [ "$GITHUB_ACTIONS" = true ]; then
+      name=$(basename "$tex" .tex)
+      echo "$hits" | sed -E "s/^[^:]*: (.*)$/::error file=$name.md,title=make check::unprocessed reference: \\1/" >&2
+    fi
     echo "[check] FAILED: unprocessed Markdown references or citations in $tex (see above)"
     status=1
   fi

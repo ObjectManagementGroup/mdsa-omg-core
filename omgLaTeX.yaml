@@ -19,7 +19,11 @@ figure-caption-position: below
 # clause heading comes from the template (e.g. 1_Scope.md) start with '##'.
 top-level-division: chapter
 number-sections: true
-listings: true
+# Code blocks with pandoc's own highlighting (fancyvrb), which accepts any
+# character the LaTeX input encoding knows, such as curly quotes pasted into code.
+# LaTeX's listings package, which aborts on them, stays available for LaTeX
+# files (omg.sty loads it).
+syntax-highlighting: default
 
 # Numbered cross-references with pandoc-crossref, which is included in the
 # pandoc/latex Docker images. It must run before citations are processed.
@@ -38,10 +42,6 @@ cite-method: biblatex
 
 # pandoc-crossref settings, see https://lierdakil.github.io/pandoc-crossref/
 metadata:
-  # Every heading can be referenced as @sec:<its GitHub identifier>, e.g.
-  # '# Figures' as @sec:figures, without {#sec:...} in the heading, which GitHub
-  # would show as text.
-  autoSectionLabels: true
   figPrefix: [Figure, Figures]
   tblPrefix: [Table, Tables]
   secPrefix: [Section, Sections]
