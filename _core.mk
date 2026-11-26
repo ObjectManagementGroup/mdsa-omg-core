@@ -71,7 +71,7 @@ clean:
 
 
 # LaTeX files support (local and core)
-coretex := $(wildcard mdsa-omg-core/*.sty) $(wildcard mdsa-omg-core/*.bib) $(wildcard mdsa-omg-core/*.yaml) $(wildcard mdsa-omg-core/*.latex)
+coretex := $(wildcard mdsa-omg-core/*.sty) $(wildcard mdsa-omg-core/*.bib) $(wildcard mdsa-omg-core/*.yaml) $(wildcard mdsa-omg-core/*.latex) $(wildcard mdsa-omg-core/*.lua)
 localtex := $(wildcard ${source}/*.tex) $(wildcard ${source}/*.bib)
 markdowns := $(filter-out ${source}/README.md, $(wildcard ${source}/*.md))
 core: $(subst mdsa-omg-core,${build},${coretex} $(wildcard mdsa-omg-core/*.tex) )
@@ -104,11 +104,11 @@ images: ${imagefiles}
 
 # Zero length files converted by pandoc end up non-zero-length, which breaks OMG templates
 # Don't convert empty files, just touch
-${build}/%.tex: ${source}/%.md ${build}/omgLaTeX.yaml
+${build}/%.tex: ${source}/%.md ${build}/omgLaTeX.yaml ${build}/gfm-heading-links.lua
 	@size=$(shell du -ks $< | cut -f1) ; \
 	if (( $${size} > 0 )); then \
 		echo "pandoc $< -> $@" ; \
-		pandoc $< -f markdown --defaults "${build}/omgLaTeX.yaml" -t latex -o $@ ; \
+		pandoc $< --defaults "${build}/omgLaTeX.yaml" -o $@ ; \
 	else \
 		touch $@ ; \
 	fi
@@ -136,6 +136,9 @@ ${build}/%.yaml: mdsa-omg-core/%.yaml
 	cp $< $@
 
 ${build}/%.latex: mdsa-omg-core/%.latex
+	cp $< $@
+
+${build}/%.lua: mdsa-omg-core/%.lua
 	cp $< $@
 
 # SVG is the only format formally accepted by OMG for documents

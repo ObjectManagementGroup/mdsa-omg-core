@@ -2,9 +2,15 @@
 # A file with the same name in the specification repository replaces this one.
 # See https://pandoc.org/MANUAL.html#defaults-files
 
-# Heading identifiers as on GitHub ('5.2.4 Types' -> '524-types'), so that links
-# such as [Types](#524-types) work both in GitHub's Markdown preview and in the PDF.
-from: markdown+gfm_auto_identifiers
+# Read Markdown the way GitHub does, so that the PDF has the structure that
+# reviewers see in GitHub's preview:
+# - gfm_auto_identifiers: heading identifiers as on GitHub ('5.2.4 Types' ->
+#   '524-types'), so that links such as [Types](#524-types) work in both
+# - lists_without_preceding_blankline, -blank_before_header,
+#   -blank_before_blockquote: lists, headings and quotes need no blank line before
+# - autolink_bare_uris: https://... becomes a link
+# - alerts: GitHub's > [!NOTE] blocks
+from: markdown+gfm_auto_identifiers+lists_without_preceding_blankline-blank_before_header-blank_before_blockquote+autolink_bare_uris+alerts
 to: latex
 table-caption-position: below
 figure-caption-position: below
@@ -17,9 +23,12 @@ listings: true
 
 # Numbered cross-references (@sec:id, @fig:id, @tbl:id) with pandoc-crossref,
 # which is included in the pandoc/latex Docker images. It must run before
-# citations are processed.
+# citations are processed. gfm-heading-links.lua makes links to headings written
+# for GitHub ([Figures](#figures)) work in the PDF; ${.} is the folder of this
+# file in the build folder, where the filter is copied to.
 filters:
   - pandoc-crossref
+  - ${.}/gfm-heading-links.lua
 
 # Citations ([@DMN16]) become biblatex \autocite commands, matching the biblatex
 # setup (style=alphabetic) of the MDSA templates.
@@ -27,6 +36,10 @@ cite-method: biblatex
 
 # pandoc-crossref settings, see https://lierdakil.github.io/pandoc-crossref/
 metadata:
+  # Every heading can be referenced as @sec:<its GitHub identifier>, e.g.
+  # '# Figures' as @sec:figures, without {#sec:...} in the heading, which GitHub
+  # would show as text.
+  autoSectionLabels: true
   figPrefix: [Figure, Figures]
   tblPrefix: [Table, Tables]
   secPrefix: [Section, Sections]
