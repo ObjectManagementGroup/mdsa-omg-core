@@ -2,6 +2,9 @@
 # A file with the same name in the specification repository replaces this one.
 # See https://pandoc.org/MANUAL.html#defaults-files
 
+# Heading identifiers as on GitHub ('5.2.4 Types' -> '524-types'), so that links
+# such as [Types](#524-types) work both in GitHub's Markdown preview and in the PDF.
+from: markdown+gfm_auto_identifiers
 to: latex
 table-caption-position: below
 figure-caption-position: below

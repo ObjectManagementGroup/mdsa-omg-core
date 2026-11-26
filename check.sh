@@ -14,9 +14,9 @@ if [ ! -f "$log" ]; then
   exit 1
 fi
 
-# 1. Unresolved references and citations, duplicate labels (show as "??" or
-#    bold keys in the PDF)
-if grep -E "(Reference|Citation) .* undefined|multiply defined" "$log"; then
+# 1. Unresolved references and citations, links to missing targets ('Hyper
+#    reference'), duplicate labels (show as "??", bold keys or dead links in the PDF)
+if grep -E "(Reference|reference|Citation) .* undefined|multiply defined" "$log"; then
   echo "[check] FAILED: undefined references or citations, or duplicate labels (see above)"
   status=1
 fi
