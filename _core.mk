@@ -1,4 +1,4 @@
-.PHONY: gen clean core local md images rfp spec debug
+.PHONY: gen clean core local md images rfp spec debug check
 
 # Several things break if only plain sh is used
 SHELL := /bin/bash
@@ -30,6 +30,12 @@ spec: "${build}" tools "${gencondir}" core local md images
 	if [ -f "${source}/.latexmkrc" ]; then cp "${source}/.latexmkrc" "${build}/.latexmkrc" ; fi
 	touch "${build}/.latexmkrc" 2>/dev/null ;
 	cd "${build}" && latexmk -bibtex -pdf -shell-escape -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
+
+# Build, then check for problems that LaTeX does not treat as errors (undefined
+# references and citations, unprocessed Markdown references). Fails if any are found.
+check: all
+	@echo --- Checking ${pdfnamebase}
+	@bash mdsa-omg-core/check.sh "${build}/${pdfnamebase}.log" $(subst ${source}/,${build}/,$(subst .md,.tex,${markdowns}))
 
 # Only generate from the model if there is an appropriate ${specacro}.config file. I.e. UML.config or BPMN.config.
 gen: "${gencondir}"
