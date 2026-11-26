@@ -104,7 +104,7 @@ images: ${imagefiles}
 
 # Zero length files converted by pandoc end up non-zero-length, which breaks OMG templates
 # Don't convert empty files, just touch
-${build}/%.tex: ${source}/%.md ${build}/omgLaTeX.yaml ${build}/gfm-heading-links.lua
+${build}/%.tex: ${source}/%.md ${build}/omgLaTeX.yaml ${build}/section-links.lua
 	@size=$(shell du -ks $< | cut -f1) ; \
 	if (( $${size} > 0 )); then \
 		echo "pandoc $< -> $@" ; \
