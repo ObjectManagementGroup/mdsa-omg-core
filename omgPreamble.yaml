@@ -1,0 +1,14 @@
+# Pandoc settings for generating pandoc-preamble.tex, the LaTeX definitions
+# that content converted from Markdown depends on. Used by _core.mk together
+# with all Markdown files of a specification.
+#
+# Deliberately no cite-method: the MDSA templates load biblatex themselves.
+
+from: markdown
+to: latex
+standalone: true
+template: ${.}/pandoc-preamble.latex
+
+variables:
+  indent: true     # keep the paragraph style of the OMG template (no parskip)
+# Not set: listings. omg.sty already loads listings and defines \passthrough.

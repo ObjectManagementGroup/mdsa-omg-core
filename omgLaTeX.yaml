@@ -1,7 +1,29 @@
+# Pandoc settings for converting Markdown clause files to LaTeX.
+# A file with the same name in the specification repository replaces this one.
+# See https://pandoc.org/MANUAL.html#defaults-files
+
 to: latex
 table-caption-position: below
 figure-caption-position: below
-top-level-division: section
+# The templates use the report class: clauses are chapters. In every Markdown
+# file, '#' is a clause (e.g. 7), '##' a subclause (7.1), and so on. Files whose
+# clause heading comes from the template (e.g. 1_Scope.md) start with '##'.
+top-level-division: chapter
 number-sections: true
 listings: true
 
+# Numbered cross-references (@sec:id, @fig:id, @tbl:id) with pandoc-crossref,
+# which is included in the pandoc/latex Docker images. It must run before
+# citations are processed.
+filters:
+  - pandoc-crossref
+
+# Citations ([@DMN16]) become biblatex \autocite commands, matching the biblatex
+# setup (style=alphabetic) of the MDSA templates.
+cite-method: biblatex
+
+# pandoc-crossref settings, see https://lierdakil.github.io/pandoc-crossref/
+metadata:
+  figPrefix: [Figure, Figures]
+  tblPrefix: [Table, Tables]
+  secPrefix: [Section, Sections]

@@ -1,0 +1,6 @@
+$-- Pandoc template that renders only the LaTeX definitions that pandoc's
+$-- output depends on (packages and macros for tables, images, inline code,
+$-- lists). They come from pandoc's own default LaTeX template (the partial
+$-- common.latex), so they always match the pandoc version in use.
+$-- Pandoc includes only what the Markdown content actually needs.
+${ common.latex() }
