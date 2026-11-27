@@ -19,6 +19,20 @@
 --   ...
 --   see [Markdown files](07_Pipeline.md#table-markdown-files)  PDF: "see Table 7.1"
 --
+-- Grammar rules (e.g. FEEL): a numbered list whose referenced items start with
+-- an HTML anchor "rule-...". GitHub and LaTeX number the list; alternatives
+-- (nested numbered lists) are numbered i, ii, iii, as GitHub shows them.
+--   1. <a id="rule-textual-expression"></a>textual expression =
+--      1. <a id="rule-textual-expression-for"></a>for expression | ... |
+--      1. disjunction ;
+--   see [textual expression](10_FEEL.md#rule-textual-expression)  PDF: "see rule 2"
+--   see [for expressions](10_FEEL.md#rule-textual-expression-for) PDF: "see rule 2.i"
+-- The numbers exist only in LaTeX (\ref), so inserting a rule changes nothing
+-- else in the source, and change bars do not mark renumbered rules.
+--
+-- Other anchors: a link to an HTML anchor <a id="..."></a> keeps its text and
+-- becomes a link to that place in the PDF.
+--
 -- GitHub shows the link text and follows the link; the PDF shows the generated
 -- number instead, so the text around a link must read well with either.
 --
@@ -116,7 +130,7 @@ end
 -- Index of a file: headings (identifier -> {level, title, table}), its first
 -- heading, and its figures (image name -> caption)
 local function index_of(blocks)
-  local idx = { headings = {}, figures = {} }
+  local idx = { headings = {}, figures = {}, anchors = {} }
   blocks:walk({
     Blocks = function(list)
       for i, el in ipairs(list) do
@@ -130,6 +144,16 @@ local function index_of(blocks)
           }
           if not is_table then idx.first = idx.first or el.identifier end
         end
+      end
+    end,
+    RawBlock = function(el)
+      if el.format == 'html' then
+        for id in el.text:gmatch('<a%s+id="([^"]+)"') do idx.anchors[id] = true end
+      end
+    end,
+    RawInline = function(el)
+      if el.format == 'html' then
+        for id in el.text:gmatch('<a%s+id="([^"]+)"') do idx.anchors[id] = true end
       end
     end,
     Figure = function(el)
@@ -240,6 +264,15 @@ local function link(el)
     if anchor == '' then anchor = idx.first or '' end
   end
 
+  if idx.anchors[anchor] then
+    if anchor:match('^rule%-') then
+      -- grammar rule: "rule 2" / "rule 2.ii", numbered by LaTeX (no typed numbers)
+      return { pandoc.Str('rule'), pandoc.Str('\u{a0}'),
+               pandoc.Link({ pandoc.RawInline('latex', '\\ref*{' .. anchor .. '}') }, '#' .. anchor) }
+    end
+    el.target = '#' .. anchor
+    return el
+  end
   local h = idx.headings[anchor]
   if not h then
     warn('](' .. target, 'link to "%s": no such heading or table', target)
@@ -328,6 +361,43 @@ local function section_cite(el)
   return el
 end
 
+local function anchor_target(el)
+  if el.format ~= 'html' then return nil end
+  local id = el.text:match('^%s*<a%s+id="([^"]+)"%s*>%s*</a>%s*$')
+    or el.text:match('^%s*<a%s+id="([^"]+)"%s*>%s*$')
+  if id then
+    local raw = '\\phantomsection\\label{' .. id .. '}'
+    return el.t == 'RawBlock' and pandoc.RawBlock('latex', raw) or pandoc.RawInline('latex', raw)
+  end
+end
+
+local function is_grammar(list)
+  local found = false
+  list:walk({ RawInline = function(r)
+    if r.format == 'html' and r.text:match('^<a%s+id="rule%-') then found = true end
+  end })
+  return found
+end
+
+local function grammar_list(el)
+  if not is_grammar(el) then return nil end
+  -- grammar text is not prose: keep straight quotes ("," and not “,”)
+  el = el:walk({ Quoted = function(q)
+    local mark = q.quotetype == 'DoubleQuote' and '"' or "'"
+    local out = pandoc.Inlines({ pandoc.Str(mark) })
+    out:extend(q.content)
+    out:insert(pandoc.Str(mark))
+    return out
+  end })
+  for _, item in ipairs(el.content) do
+    for _, b in ipairs(item) do
+      if b.t == 'OrderedList' then b.listAttributes = pandoc.ListAttributes(1, 'LowerRoman', 'Period') end
+    end
+  end
+  return { pandoc.RawBlock('latex', '{\\renewcommand{\\theenumii}{\\roman{enumii}}\\makeatletter\\renewcommand{\\p@enumii}{\\theenumi.}\\makeatother'),
+           el, pandoc.RawBlock('latex', '}') }
+end
+
 function Pandoc(doc)
   own = index_of(doc.blocks)
   doc.blocks:walk({
@@ -340,7 +410,12 @@ function Pandoc(doc)
       end
     end,
   })
-  return doc:walk({ Link = link })
+  -- top-down: only the outermost list of a grammar is a grammar list
+  return doc:walk({ traverse = 'topdown', OrderedList = function(el)
+              local r = grammar_list(el)
+              if r then return r, false end
+            end })
+            :walk({ Link = link, RawBlock = anchor_target, RawInline = anchor_target })
             :walk({ Cite = section_cite })
             :walk({ Figure = figure })
             :walk({ Blocks = blocks })
