@@ -16,12 +16,15 @@ specacro = $(shell specsetup --lookup specacro --setupFile "${source}/_${doc}_Se
 version  = $(shell specsetup --lookup version --setupFile "${source}/_${doc}_Setup.tex")
 
 rfp: doc="RFP"
+# RFP files are fragments inside the RFP template's sections: '#' is a section
+# there, not a chapter as in specifications
+rfp: _pandoc_opts=--top-level-division=section
 rfp: "${build}" tools rfp_core local md images
 	@echo --- Creating PDF
 	mv "${build}/${doc}.tex" "${build}/${pdfnamebase}.tex"
 	if [ -f "${source}/.latexmkrc" ]; then cp "${source}/.latexmkrc" "${build}/.latexmkrc" ; fi
 	touch "${build}/.latexmkrc" 2>/dev/null ;
-	cd "${build}" && latexmk -bibtex -pdf -shell-escape -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
+	cd "${build}" && max_print_line=10000 latexmk -bibtex -pdf -shell-escape -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
 
 spec: doc="Specification"
 spec: "${build}" tools "${gencondir}" core local md images 
@@ -29,7 +32,7 @@ spec: "${build}" tools "${gencondir}" core local md images
 	mv "${build}/${doc}.tex" "${build}/${pdfnamebase}.tex" ;
 	if [ -f "${source}/.latexmkrc" ]; then cp "${source}/.latexmkrc" "${build}/.latexmkrc" ; fi
 	touch "${build}/.latexmkrc" 2>/dev/null ;
-	cd "${build}" && latexmk -bibtex -pdf -shell-escape -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
+	cd "${build}" && max_print_line=10000 latexmk -bibtex -pdf -shell-escape -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
 
 # Build, then check for problems that LaTeX does not treat as errors (undefined
 # references and citations, unprocessed Markdown references). Fails if any are found.
@@ -108,7 +111,7 @@ ${build}/%.tex: ${source}/%.md ${build}/omgLaTeX.yaml ${build}/crossref-links.lu
 	@size=$(shell du -ks $< | cut -f1) ; \
 	if (( $${size} > 0 )); then \
 		echo "pandoc $< -> $@" ; \
-		pandoc $< --defaults "${build}/omgLaTeX.yaml" -o $@ ; \
+		pandoc $< --defaults "${build}/omgLaTeX.yaml" ${_pandoc_opts} -o $@ ; \
 	else \
 		touch $@ ; \
 	fi

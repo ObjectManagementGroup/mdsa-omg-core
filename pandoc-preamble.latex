@@ -4,3 +4,8 @@ $-- lists). They come from pandoc's own default LaTeX template (the partial
 $-- common.latex), so they always match the pandoc version in use.
 $-- Pandoc includes only what the Markdown content actually needs.
 ${ common.latex() }
+$-- Definitions added by filters, e.g. pandoc-crossref's environment for figures
+$-- made of several images (subfigures) and its code listing float
+$for(header-includes)$
+$header-includes$
+$endfor$

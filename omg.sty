@@ -59,6 +59,10 @@
 \usepackage{color}
 
 % For future use with Jira and auto changebar doc production
+% float must be loaded before changebar, which patches it (change bars in
+% floats); pandoc-crossref's preamble loads float otherwise, after changebar,
+% which fails with 'Command \float@end already defined'.
+\usepackage{float}
 \usepackage[pdftex]{changebar}
 \usepackage{marginnote}
 

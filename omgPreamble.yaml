@@ -9,6 +9,10 @@ to: latex
 standalone: true
 template: ${.}/pandoc-preamble.latex
 
+# pandoc-crossref adds definitions its output needs (header-includes)
+filters:
+  - pandoc-crossref
+
 variables:
   indent: true     # keep the paragraph style of the OMG template (no parskip)
 # Not set: listings. omg.sty already loads listings and defines \passthrough.

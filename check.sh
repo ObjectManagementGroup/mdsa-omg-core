@@ -16,7 +16,9 @@ fi
 
 # 1. Unresolved references and citations, links to missing targets ('Hyper
 #    reference'), duplicate labels (show as "??", bold keys or dead links in the PDF)
-problems=$(grep -E "(Reference|reference|Citation) .* undefined|multiply defined" "$log")
+# The build runs LaTeX with max_print_line=10000, so warnings are not wrapped
+# across lines; LaTeX's summary warnings catch them in any case.
+problems=$(grep -E "(Reference|reference|Citation) .* undefined|multiply defined|There were undefined references|There were multiply-defined labels" "$log")
 if [ -n "$problems" ]; then
   echo "$problems"
   if [ "$GITHUB_ACTIONS" = true ]; then
