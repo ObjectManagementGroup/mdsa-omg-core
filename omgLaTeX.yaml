@@ -19,11 +19,10 @@ figure-caption-position: below
 # clause heading comes from the template (e.g. 1_Scope.md) start with '##'.
 top-level-division: chapter
 number-sections: true
-# Code blocks with pandoc's own highlighting (fancyvrb), which accepts any
-# character the LaTeX input encoding knows, such as curly quotes pasted into code.
-# LaTeX's listings package, which aborts on them, stays available for LaTeX
-# files (omg.sty loads it).
-syntax-highlighting: default
+# Code is formatted with the listings package, as in LaTeX files. Code may only
+# contain ASCII characters, or characters declared with listings' 'literate'
+# option; code-characters.lua reports typographic characters in code.
+listings: true
 
 # Numbered cross-references with pandoc-crossref, which is included in the
 # pandoc/latex Docker images. It must run before citations are processed.
@@ -33,6 +32,7 @@ syntax-highlighting: default
 # headings, which become the captions of the tables below them ("Table 7.1").
 # ${.} is the folder of this file in the build folder, where the filter is copied.
 filters:
+  - ${.}/code-characters.lua
   - ${.}/crossref-links.lua
   - pandoc-crossref
 
