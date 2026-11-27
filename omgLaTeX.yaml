@@ -32,10 +32,17 @@ listings: true
 # "Annex A"), to images of figures ("Figure 7.1"), and to "###### Table: Caption"
 # headings, which become the captions of the tables below them ("Table 7.1").
 # ${.} is the folder of this file in the build folder, where the filter is copied.
+# html-tables.lua turns HTML tables (with Markdown in the cells) into pandoc
+# tables; tables.lua, last, writes all tables as tabularray tables in the OMG
+# style (full grid). specification.lua is the hook for a specification's own
+# filter (the core version does nothing).
 filters:
   - ${.}/code-characters.lua
+  - ${.}/html-tables.lua
   - ${.}/crossref-links.lua
   - pandoc-crossref
+  - ${.}/specification.lua
+  - ${.}/tables.lua
 
 # Citations ([@DMN16]) become biblatex \autocite commands, matching the biblatex
 # setup (style=alphabetic) of the MDSA templates.
