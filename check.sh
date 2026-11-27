@@ -35,7 +35,7 @@ for tex in "$@"; do
   [ -f "$tex" ] || continue
   hits=$(perl -0777 -ne '
     s/\\begin\{(lstlisting|Shaded|verbatim|Verbatim)\}.*?\\end\{\1\}//gs;
-    s/\\lstinline!([^!]*)!//g;
+    s/\\(?:lstinline|VERB)(.)(.*?)\1//g;
     s/\\(?:texttt|passthrough)(\{(?:[^{}]++|(?1))*\})//g;
     print "$ARGV: $&\n" while /^.*(?:\@(?:sec|fig|tbl|eq|lst):|\{\[\}\@).*$/mg;
   ' "$tex")
