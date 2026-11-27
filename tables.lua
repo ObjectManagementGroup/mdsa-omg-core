@@ -11,6 +11,8 @@
 --   caption and identifier        -> caption={...}, label={tbl:...}
 --   footnotes in cells            -> table notes below the table
 --   line breaks in cells          -> \newline (\\ would end the row)
+--   tables in cells (HTML tables) -> an inner tblr with natural column widths,
+--                                    without padding around it
 --
 -- Specification styles (see specification.lua) can add to a table through its
 -- attributes, which this filter appends to the tabularray settings:
@@ -21,6 +23,8 @@
 --   tblr-after    LaTeX inserted after the table
 --   tblr-env      the environment: longtblr (default; breaks across pages,
 --                 caption) or tblr (one piece, no caption)
+--   tblr-lines    replaces the full grid ("hlines, vlines"), e.g. with
+--                 single line segments; empty for no lines
 -- Runs after pandoc-crossref and after specification.lua.
 
 local ALIGN = { AlignLeft = 'l', AlignCenter = 'c', AlignRight = 'r', AlignDefault = 'l' }
@@ -30,9 +34,13 @@ local function latex(blocks)
   return (s:gsub('^%s+', ''):gsub('%s+$', ''))
 end
 
+local render
+
 -- LaTeX of a cell; footnotes become table notes
 local function cell_latex(blocks, notes)
   blocks = pandoc.Blocks(blocks):walk({
+    traverse = 'topdown',
+    Table = function(t) return render(t, true), false end,
     Note = function(n)
       table.insert(notes, latex(n.content))
       return pandoc.RawInline('latex', '\\TblrNote{' .. #notes .. '}')
@@ -77,8 +85,9 @@ local function fmt(x)
   return (string.format('%.2f', x):gsub('0+$', ''):gsub('%.$', ''))
 end
 
-function Table(tbl)
-  if not FORMAT:match('latex') then return nil end
+-- Writes a table; a nested table (in a cell of another table) is a tblr with
+-- natural column widths and no caption
+render = function(tbl, nested)
 
   -- all rows: header rows, then body rows (with their own header rows), then foot
   local rows, nhead = {}, 0
@@ -113,6 +122,11 @@ function Table(tbl)
     for c = 1, n do line[c] = '' end
     for _, p in ipairs(entry.cells) do
       line[p.col] = cell_latex(p.cell.contents, notes)
+      if #p.cell.contents == 1 and p.cell.contents[1].t == 'Table' then
+        -- a nested table fills its cell: no padding (tabularray's colsep is 6pt)
+        line[p.col] = '\\hspace*{-6pt}' .. line[p.col] .. '\\hspace*{-6pt}'
+        table.insert(inner, ('row{%d}={abovesep=0pt, belowsep=0pt}'):format(r))
+      end
       if p.cell.row_span > 1 or p.cell.col_span > 1 then
         table.insert(inner, ('cell{%d}{%d}={r=%d,c=%d}{}'):format(
           r, p.col, p.cell.row_span, p.cell.col_span))
@@ -126,7 +140,9 @@ function Table(tbl)
 
   -- column spec
   local colspec = tbl.attributes['tblr-colspec']
-  if not colspec then
+  if not colspec and nested then
+    colspec = string.rep('Q[l]', #tbl.colspecs)
+  elseif not colspec then
     local w, parts = widths(tbl, rows), {}
     for i, spec in ipairs(tbl.colspecs) do
       table.insert(parts, ('X[%s,%s]'):format(fmt(w[i]), ALIGN[spec[1]] or 'l'))
@@ -134,7 +150,8 @@ function Table(tbl)
     colspec = table.concat(parts, ' ')
   end
   table.insert(inner, 1, 'colspec={' .. colspec .. '}')
-  table.insert(inner, 2, 'hlines, vlines')
+  local lines = tbl.attributes['tblr-lines'] or 'hlines, vlines'
+  if lines ~= '' then table.insert(inner, 2, lines) end
   if nhead > 0 then
     table.insert(inner, ('rowhead=%d'):format(nhead))
     table.insert(inner, ('row{1-%d}={font=\\omgtablehead}'):format(nhead))
@@ -142,7 +159,7 @@ function Table(tbl)
   if tbl.attributes['tblr-inner'] then table.insert(inner, tbl.attributes['tblr-inner']) end
 
   -- outer spec: caption, label, notes
-  local env = tbl.attributes['tblr-env'] or 'longtblr'
+  local env = nested and 'tblr' or tbl.attributes['tblr-env'] or 'longtblr'
   local outer = {}
   local caption = latex({ pandoc.Plain(pandoc.utils.blocks_to_inlines(tbl.caption.long)) })
   if env ~= 'longtblr' then
@@ -163,3 +180,11 @@ function Table(tbl)
     (tbl.attributes['tblr-after'] or '')
   return pandoc.RawBlock('latex', tex)
 end
+
+-- Top-down, so that tables in cells are written as part of their table
+return { {
+  traverse = 'topdown',
+  Table = function(tbl)
+    if FORMAT:match('latex') then return render(tbl, false), false end
+  end,
+} }
