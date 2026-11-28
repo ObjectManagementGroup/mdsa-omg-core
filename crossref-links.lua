@@ -342,12 +342,21 @@ local function figure(el)
   end
 end
 
--- Headings are labelled sec:<file>--<identifier>
+-- Headings are labelled sec:<file>--<identifier>. Headings in front matter
+-- files (00_*.md, e.g. a preface) are not numbered, as in the LaTeX template.
+local front_matter = this_name:match('^00_') ~= nil
+
 local function header(el)
+  local changed = false
+  if front_matter and not el.classes:includes('unnumbered') then
+    el.classes:insert('unnumbered')
+    changed = true
+  end
   if el.identifier ~= '' and not el.identifier:find(':', 1, true) then
     el.identifier = section_label(this_name, el.identifier)
-    return el
+    changed = true
   end
+  if changed then return el end
 end
 
 -- @sec:types written directly: the label of that heading in this or another

@@ -10,7 +10,7 @@
 --   merged cells                  -> cell{r}{c}={r=2,c=1}{}
 --   caption and identifier        -> caption={...}, label={tbl:...}
 --   footnotes in cells            -> table notes below the table
---   line breaks in cells          -> \newline (\\ would end the row)
+--   line breaks in cells          -> \\ in a braced cell (tabularray's way)
 --   tables in cells (HTML tables) -> an inner tblr with natural column widths,
 --                                    without padding around it
 --
@@ -38,6 +38,7 @@ local render
 
 -- LaTeX of a cell; footnotes become table notes
 local function cell_latex(blocks, notes)
+  local breaks = false
   blocks = pandoc.Blocks(blocks):walk({
     traverse = 'topdown',
     Table = function(t) return render(t, true), false end,
@@ -45,12 +46,16 @@ local function cell_latex(blocks, notes)
       table.insert(notes, latex(n.content))
       return pandoc.RawInline('latex', '\\TblrNote{' .. #notes .. '}')
     end,
-    LineBreak = function() return pandoc.RawInline('latex', '\\newline ') end,
+    -- \\ in braces: tabularray then keeps it in the cell, and it ends the line
+    -- in centered cells too (\newline leaves the line off-centre)
+    LineBreak = function() breaks = true; return pandoc.RawInline('latex', '\\\\ ') end,
     Image = function(img)
       return { pandoc.RawInline('latex', '\\raisebox{-0.5\\height}{'), img, pandoc.RawInline('latex', '}') }
     end,
   })
-  return latex(blocks)
+  local tex = latex(blocks)
+  if breaks then tex = '{' .. tex .. '}' end
+  return tex
 end
 
 -- Relative column widths, from the contents: at least the longest word (which
