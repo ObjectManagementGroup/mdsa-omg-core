@@ -22,7 +22,8 @@
 --
 -- The classes of <col> elements in a <colgroup>, which pandoc's HTML reader does
 -- not keep, are stored in the table attribute "columns" (space-separated), for
--- specification-specific table styles (see specification.lua).
+-- specification-specific table styles (see specification.lua); nested tables
+-- get the classes of their own <colgroup>.
 --
 -- Also: <br> in a cell of a pipe table (or anywhere) becomes a line break.
 
@@ -58,16 +59,27 @@ local function restore(el, parked)
   end })
 end
 
--- Classes of the <col> elements of the first <colgroup>
-local function column_classes(html)
-  local group = html:match('<colgroup.-</colgroup>') or html:match('<colgroup.-<tr') or ''
-  local classes = {}
-  for col in group:gmatch('<col[%s>][^>]*') do
-    local class = col:match('class%s*=%s*"([^"]*)"') or ''
-    local span = tonumber(col:match('span%s*=%s*"(%d+)"') or '1')
-    for _ = 1, span do table.insert(classes, class == '' and '-' or class) end
+-- Classes of the <col> elements of each table's <colgroup>, in the order of
+-- the <table> tags (nested tables included); '' for a table without one
+local function colgroups(html)
+  local result, pos = {}, 1
+  while true do
+    local s, e = html:find('<table[%s>]', pos)
+    if not s then break end
+    -- the part of this table before its first row or nested table
+    local stop = math.min(html:find('<tr', e) or #html + 1, html:find('<table[%s>]', e) or #html + 1)
+    local head = html:sub(e, stop - 1)
+    local group = head:match('<colgroup.-</colgroup>') or head:match('<colgroup.*') or ''
+    local classes = {}
+    for col in group:gmatch('<col[%s>][^>]*') do
+      local class = col:match('class%s*=%s*"([^"]*)"') or ''
+      local span = tonumber(col:match('span%s*=%s*"(%d+)"') or '1')
+      for _ = 1, span do table.insert(classes, class == '' and '-' or class) end
+    end
+    table.insert(result, table.concat(classes, ' '))
+    pos = e
   end
-  return table.concat(classes, ' ')
+  return result
 end
 
 local function is_html(b, pattern)
@@ -92,11 +104,15 @@ function Blocks(blocks)
         j = j + 1
       until depth <= 0 or j > #blocks
       local html = table.concat(parts, '\n')
-      local columns = column_classes(html)
+      local groups, k = colgroups(html), 0
       for _, r in ipairs(pandoc.read(html, 'html').blocks) do
         r = restore(r, parked)
-        if r.t == 'Table' and columns ~= '' then r.attributes['columns'] = columns end
-        out:insert(r)
+        -- tables in the order of their <table> tags: outer before nested
+        out:extend(pandoc.Blocks({ r }):walk({ traverse = 'topdown', Table = function(t)
+          k = k + 1
+          if groups[k] and groups[k] ~= '' then t.attributes['columns'] = groups[k] end
+          return t
+        end }))
       end
       i, changed = j, true
     else
