@@ -41,6 +41,25 @@ local function esc(t)
   return (t:gsub('&', '&amp;'):gsub('<', '&lt;'):gsub('>', '&gt;'))
 end
 
+-- Math or code that pandoc read across cells ($ in one cell, $ in the next)
+-- contains the HTML tags between them: they are tags again, the rest is text
+local function esc_keep_tags(t)
+  local out, pos = {}, 1
+  for a, tag, b in t:gmatch('()(</?%a[^<>]*>)()') do
+    table.insert(out, esc(t:sub(pos, a - 1)))
+    table.insert(out, tag)
+    pos = b
+  end
+  table.insert(out, esc(t:sub(pos)))
+  return table.concat(out)
+end
+
+local TYPED = { ['\u{201C}'] = '"', ['\u{201D}'] = '"', ['\u{2018}'] = "'", ['\u{2019}'] = "'", ['\u{2026}'] = '...' }
+local function typed(t)
+  for from, to in pairs(TYPED) do t = t:gsub(from, to) end
+  return t
+end
+
 local literal
 local function wrap(open, inlines, close) return open .. literal(inlines) .. (close or open) end
 literal = function(inlines)
@@ -48,7 +67,9 @@ literal = function(inlines)
   for _, el in ipairs(inlines) do
     local t = el.t
     local s
-    if t == 'Str' then s = esc(el.text)
+    -- smart typography also turned lone quotes and "..." into typographic
+    -- characters inside the text: back to what was typed
+    if t == 'Str' then s = esc(typed(el.text))
     elseif t == 'Space' then s = ' '
     elseif t == 'SoftBreak' then s = '\n'
     elseif t == 'LineBreak' then s = '<br>'
@@ -63,10 +84,10 @@ literal = function(inlines)
     elseif t == 'Quoted' then
       local mark = el.quotetype == 'DoubleQuote' and '"' or "'"
       s = wrap(mark, el.content)
-    elseif t == 'Code' then s = '`' .. esc(el.text) .. '`'
+    elseif t == 'Code' then s = '`' .. esc_keep_tags(el.text) .. '`'
     elseif t == 'Math' then
       local d = el.mathtype == 'DisplayMath' and '$$' or '$'
-      s = d .. esc(el.text) .. d
+      s = d .. esc_keep_tags(el.text) .. d
     elseif t == 'Link' then s = '[' .. literal(el.content) .. '](' .. esc(el.target) .. ')'
     elseif t == 'Image' then s = '![' .. literal(el.caption) .. '](' .. esc(el.src) .. ')'
     elseif t == 'Span' and el.attributes['parked'] then
@@ -141,7 +162,8 @@ function Blocks(blocks)
       until depth <= 0 or j > #blocks
       local html = table.concat(parts, '\n')
       local groups, k = colgroups(html), 0
-      for _, r in ipairs(pandoc.read(html, 'html').blocks) do
+      -- without smart typography, which pandoc.read takes from the Markdown reader
+      for _, r in ipairs(pandoc.read(html, 'html-smart').blocks) do
         r = restore(r, parked)
         -- tables in the order of their <table> tags: outer before nested
         out:extend(pandoc.Blocks({ r }):walk({ traverse = 'topdown', Table = function(t)
