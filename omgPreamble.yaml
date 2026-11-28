@@ -4,7 +4,7 @@
 #
 # Deliberately no cite-method: the MDSA templates load biblatex themselves.
 
-from: markdown
+from: markdown-shortcut_reference_links
 to: latex
 standalone: true
 template: ${.}/pandoc-preamble.latex

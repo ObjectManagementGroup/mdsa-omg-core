@@ -121,7 +121,7 @@ render = function(tbl, nested)
     end
   end
 
-  local notes, inner, body = {}, {}, {}
+  local notes, inner, body, nested_rows = {}, {}, {}, {}
   for r, entry in ipairs(rows) do
     local line = {}
     for c = 1, n do line[c] = '' end
@@ -130,7 +130,7 @@ render = function(tbl, nested)
       if #p.cell.contents == 1 and p.cell.contents[1].t == 'Table' then
         -- a nested table fills its cell: no padding (tabularray's colsep is 6pt)
         line[p.col] = '\\hspace*{-6pt}' .. line[p.col] .. '\\hspace*{-6pt}'
-        table.insert(inner, ('row{%d}={abovesep=0pt, belowsep=0pt}'):format(r))
+        table.insert(nested_rows, ('row{%d}={abovesep=0pt, belowsep=0pt}'):format(r))
       end
       if p.cell.row_span > 1 or p.cell.col_span > 1 then
         table.insert(inner, ('cell{%d}{%d}={r=%d,c=%d}{}'):format(
@@ -164,6 +164,8 @@ render = function(tbl, nested)
     table.insert(inner, ('row{1-%d}={font=\\omgtablehead}'):format(nhead))
   end
   if tbl.attributes['tblr-inner'] then table.insert(inner, tbl.attributes['tblr-inner']) end
+  -- after a style's settings (e.g. its rowsep): rows with a nested table
+  for _, n in ipairs(nested_rows) do table.insert(inner, n) end
 
   -- outer spec: caption, label, notes
   local env = nested and 'tblr' or tbl.attributes['tblr-env'] or 'longtblr'

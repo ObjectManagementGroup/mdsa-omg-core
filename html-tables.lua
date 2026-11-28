@@ -32,15 +32,51 @@ local function park(el, parked)
   return pandoc.Span({}, { parked = tostring(#parked) })
 end
 
--- Text typed directly inside the HTML tags (a Plain block between them)
--- stays as typed, as GitHub shows it: pandoc's smart quotes are undone.
--- Markdown paragraphs in cells (separated by blank lines) keep them.
-local function straight(q)
-  local mark = q.quotetype == 'DoubleQuote' and '"' or "'"
-  local out = pandoc.Inlines({ pandoc.Str(mark) })
-  out:extend(q.content)
-  out:insert(pandoc.Str(mark))
-  return out
+-- Text typed directly inside the HTML tags (a Plain block between them) is
+-- literal, as GitHub shows it: pandoc's Markdown reader has parsed it as
+-- Markdown (FEEL's "a * b * c" became emphasis, "$" math, quotes curly), so
+-- it is written back as the text that was typed. Markdown paragraphs in cells
+-- (separated from the tags by blank lines) are Markdown, on GitHub as here.
+local function esc(t)
+  return (t:gsub('&', '&amp;'):gsub('<', '&lt;'):gsub('>', '&gt;'))
+end
+
+local literal
+local function wrap(open, inlines, close) return open .. literal(inlines) .. (close or open) end
+literal = function(inlines)
+  local out = {}
+  for _, el in ipairs(inlines) do
+    local t = el.t
+    local s
+    if t == 'Str' then s = esc(el.text)
+    elseif t == 'Space' then s = ' '
+    elseif t == 'SoftBreak' then s = '\n'
+    elseif t == 'LineBreak' then s = '<br>'
+    elseif t == 'RawInline' then s = el.format == 'html' and el.text or esc(el.text)
+    elseif t == 'Emph' then s = wrap('*', el.content)
+    elseif t == 'Strong' then s = wrap('**', el.content)
+    elseif t == 'Strikeout' then s = wrap('~~', el.content)
+    elseif t == 'Superscript' then s = wrap('^', el.content)
+    elseif t == 'Subscript' then s = wrap('~', el.content)
+    elseif t == 'Underline' then s = literal(el.content)
+    elseif t == 'SmallCaps' then s = literal(el.content)
+    elseif t == 'Quoted' then
+      local mark = el.quotetype == 'DoubleQuote' and '"' or "'"
+      s = wrap(mark, el.content)
+    elseif t == 'Code' then s = '`' .. esc(el.text) .. '`'
+    elseif t == 'Math' then
+      local d = el.mathtype == 'DisplayMath' and '$$' or '$'
+      s = d .. esc(el.text) .. d
+    elseif t == 'Link' then s = '[' .. literal(el.content) .. '](' .. esc(el.target) .. ')'
+    elseif t == 'Image' then s = '![' .. literal(el.caption) .. '](' .. esc(el.src) .. ')'
+    elseif t == 'Span' and el.attributes['parked'] then
+      s = '<span data-parked="' .. el.attributes['parked'] .. '"></span>'
+    elseif t == 'Span' then s = literal(el.content)
+    else s = esc(pandoc.utils.stringify(el))
+    end
+    table.insert(out, s)
+  end
+  return table.concat(out)
 end
 
 local function html_of(block, parked)
@@ -48,7 +84,7 @@ local function html_of(block, parked)
     Note = function(n) return park(n, parked) end,
     Cite = function(c) return park(c, parked) end,
   })
-  if block.t == 'Plain' then blocks = blocks:walk({ Quoted = straight }) end
+  if block.t == 'Plain' then return literal(blocks[1].content) end
   return pandoc.write(pandoc.Pandoc(blocks), 'html')
 end
 

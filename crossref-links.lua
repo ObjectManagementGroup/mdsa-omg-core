@@ -59,7 +59,7 @@
 -- - a "Table:" heading that is not directly followed by a table
 
 -- Must match the 'from' setting in omgLaTeX.yaml, for reading linked files
-local READER = 'markdown+gfm_auto_identifiers+lists_without_preceding_blankline'
+local READER = 'markdown+gfm_auto_identifiers+lists_without_preceding_blankline-shortcut_reference_links'
   .. '-blank_before_header-blank_before_blockquote'
 
 local IMAGE = { svg = true, png = true, jpg = true, jpeg = true, gif = true, pdf = true }

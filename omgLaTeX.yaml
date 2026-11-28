@@ -10,7 +10,10 @@
 #   -blank_before_blockquote: lists, headings and quotes need no blank line before
 # - autolink_bare_uris: https://... becomes a link
 # - alerts: GitHub's > [!NOTE] blocks
-from: markdown+gfm_auto_identifiers+lists_without_preceding_blankline-blank_before_header-blank_before_blockquote+autolink_bare_uris+alerts
+# - -shortcut_reference_links: no [text] links to [text]: url definitions, which
+#   make pandoc swallow text between brackets in different HTML table cells,
+#   e.g. the FEEL ranges [1..2) and (3..4]
+from: markdown+gfm_auto_identifiers+lists_without_preceding_blankline-blank_before_header-blank_before_blockquote+autolink_bare_uris+alerts-shortcut_reference_links
 to: latex
 table-caption-position: below
 figure-caption-position: below
