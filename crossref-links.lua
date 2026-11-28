@@ -23,10 +23,12 @@
 -- an HTML anchor "rule-...". GitHub and LaTeX number the list; alternatives
 -- (nested numbered lists) are numbered i, ii, iii, as GitHub shows them.
 --   1. <a id="rule-textual-expression"></a>textual expression =
---      1. <a id="rule-textual-expression-for"></a>for expression | ... |
+--      1. <a id="rule-textual-expression-i"></a>for expression | ... |
 --      1. disjunction ;
 --   see [textual expression](10_FEEL.md#rule-textual-expression)  PDF: "see rule 2"
---   see [for expressions](10_FEEL.md#rule-textual-expression-for) PDF: "see rule 2.i"
+--   see [for expressions](10_FEEL.md#rule-textual-expression-i)   PDF: "see rule 2.i"
+--   | [2.i](10_FEEL.md#rule-textual-expression-i) |                 PDF: "2.i" (a link
+--                                    whose text is a rule number: the number only)
 -- The numbers exist only in LaTeX (\ref), so inserting a rule changes nothing
 -- else in the source, and change bars do not mark renumbered rules.
 --
@@ -270,9 +272,11 @@ local function link(el)
 
   if idx.anchors[anchor] then
     if anchor:match('^rule%-') then
-      -- grammar rule: "rule 2" / "rule 2.ii", numbered by LaTeX (no typed numbers)
-      return { pandoc.Str('rule'), pandoc.Str('\u{a0}'),
-               pandoc.Link({ pandoc.RawInline('latex', '\\ref*{' .. anchor .. '}') }, '#' .. anchor) }
+      -- grammar rule: "rule 2" / "rule 2.ii", numbered by LaTeX (no typed numbers);
+      -- a link whose text is a rule number ([49.iii](#rule-...)) is the number only
+      local ref = pandoc.Link({ pandoc.RawInline('latex', '\\ref*{' .. anchor .. '}') }, '#' .. anchor)
+      if pandoc.utils.stringify(el.content):match('^%d+[%.%w]*$') then return ref end
+      return { pandoc.Str('rule'), pandoc.Str('\u{a0}'), ref }
     end
     el.target = '#' .. anchor
     return el
