@@ -1,0 +1,31 @@
+$-- Pandoc template that renders only the LaTeX definitions that pandoc's
+$-- output depends on (packages and macros for tables, images, inline code,
+$-- lists). They come from pandoc's own default LaTeX template (the partial
+$-- common.latex), so they always match the pandoc version in use.
+$-- Pandoc includes only what the Markdown content actually needs.
+${ common.latex() }
+$-- Tables: tables.lua writes all tables as tabularray tables (OMG style: full
+$-- grid, bold header rows, caption below the table, no "continued" texts).
+$-- The varwidth library allows lists and paragraphs in cells.
+\usepackage{tabularray}
+\UseTblrLibrary{varwidth}
+\providecommand{\omgtablehead}{\bfseries}
+\SetTblrStyle{caption-tag,caption-sep,caption-text}{font=\sffamily}
+\DefTblrTemplate{caption-sep}{default}{:\space}
+$-- Captions are as wide as the text, centered over the table (tabularray sets
+$-- them in the table's width, which breaks the caption of a narrow table)
+\DefTblrTemplate{caption}{default}{\makebox[\hsize][c]{\parbox{\textwidth}{\hsize=\textwidth\UseTblrTemplate{caption}{normal}}}}
+\DefTblrTemplate{firsthead,middlehead,lasthead}{default}{}
+\DefTblrTemplate{firstfoot,middlefoot}{default}{}
+\DefTblrTemplate{lastfoot}{default}{\UseTblrTemplate{note}{default}\UseTblrTemplate{remark}{default}\UseTblrTemplate{caption}{default}}
+$-- \omgtablecaptionabove in _Specification_AuthorSettings.tex puts the captions of
+$-- all tables above them instead (e.g. DMN)
+\newcommand{\omgtablecaptionabove}{%
+  \DefTblrTemplate{firsthead}{default}{\UseTblrTemplate{caption}{default}}%
+  \DefTblrTemplate{lastfoot}{default}{\UseTblrTemplate{note}{default}\UseTblrTemplate{remark}{default}}}
+\NewTblrTheme{omgplain}{\DefTblrTemplate{lastfoot}{default}{\UseTblrTemplate{note}{default}\UseTblrTemplate{remark}{default}}}
+$-- Definitions added by filters, e.g. pandoc-crossref's environment for figures
+$-- made of several images (subfigures) and its code listing float
+$for(header-includes)$
+$header-includes$
+$endfor$
