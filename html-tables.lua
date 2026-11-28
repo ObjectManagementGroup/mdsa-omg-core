@@ -31,11 +31,23 @@ local function park(el, parked)
   return pandoc.Span({}, { parked = tostring(#parked) })
 end
 
+-- Text typed directly inside the HTML tags (a Plain block between them)
+-- stays as typed, as GitHub shows it: pandoc's smart quotes are undone.
+-- Markdown paragraphs in cells (separated by blank lines) keep them.
+local function straight(q)
+  local mark = q.quotetype == 'DoubleQuote' and '"' or "'"
+  local out = pandoc.Inlines({ pandoc.Str(mark) })
+  out:extend(q.content)
+  out:insert(pandoc.Str(mark))
+  return out
+end
+
 local function html_of(block, parked)
   local blocks = pandoc.Blocks({ block }):walk({
     Note = function(n) return park(n, parked) end,
     Cite = function(c) return park(c, parked) end,
   })
+  if block.t == 'Plain' then blocks = blocks:walk({ Quoted = straight }) end
   return pandoc.write(pandoc.Pandoc(blocks), 'html')
 end
 
