@@ -1,0 +1,10 @@
+-- Hook for a specification's own pandoc filter. This core version does nothing.
+--
+-- A specification that needs its own Markdown processing, e.g. a table style for
+-- its notation, puts a file specification.lua into its repository; it replaces
+-- this one. It runs after pandoc-crossref and before tables.lua, so it sees
+-- tables with their captions, identifiers and the "columns" attribute (classes
+-- of the <col> elements of HTML tables), and can set the tblr-* attributes that
+-- tables.lua adds to the tabularray table, or return its own LaTeX.
+--
+-- See https://pandoc.org/lua-filters.html

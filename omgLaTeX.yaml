@@ -1,7 +1,58 @@
+# Pandoc settings for converting Markdown clause files to LaTeX.
+# A file with the same name in the specification repository replaces this one.
+# See https://pandoc.org/MANUAL.html#defaults-files
+
+# Read Markdown the way GitHub does, so that the PDF has the structure that
+# reviewers see in GitHub's preview:
+# - gfm_auto_identifiers: heading identifiers as on GitHub ('5.2.4 Types' ->
+#   '524-types'), so that links such as [Types](#524-types) work in both
+# - lists_without_preceding_blankline, -blank_before_header,
+#   -blank_before_blockquote: lists, headings and quotes need no blank line before
+# - autolink_bare_uris: https://... becomes a link
+# - alerts: GitHub's > [!NOTE] blocks
+# - -shortcut_reference_links: no [text] links to [text]: url definitions, which
+#   make pandoc swallow text between brackets in different HTML table cells,
+#   e.g. the FEEL ranges [1..2) and (3..4]
+from: markdown+gfm_auto_identifiers+lists_without_preceding_blankline-blank_before_header-blank_before_blockquote+autolink_bare_uris+alerts-shortcut_reference_links
 to: latex
 table-caption-position: below
 figure-caption-position: below
-top-level-division: section
+# The templates use the report class: clauses are chapters. In every Markdown
+# file, '#' is a clause (e.g. 7), '##' a subclause (7.1), and so on. Files whose
+# clause heading comes from the template (e.g. 1_Scope.md) start with '##'.
+# RFP builds use 'section' instead (see the rfp target in _core.mk).
+top-level-division: chapter
 number-sections: true
+# Code is formatted with the listings package, as in LaTeX files. Code may only
+# contain ASCII characters, or characters declared with listings' 'literate'
+# option; code-characters.lua reports typographic characters in code.
 listings: true
 
+# Numbered cross-references with pandoc-crossref, which is included in the
+# pandoc/latex Docker images. It must run before citations are processed.
+# crossref-links.lua, which runs before it, turns ordinary Markdown links, as on
+# GitHub, into numbered references: links to headings ("5.2.4", "Clause 5",
+# "Annex A"), to images of figures ("Figure 7.1"), and to "###### Table: Caption"
+# headings, which become the captions of the tables below them ("Table 7.1").
+# ${.} is the folder of this file in the build folder, where the filter is copied.
+# html-tables.lua turns HTML tables (with Markdown in the cells) into pandoc
+# tables; tables.lua, last, writes all tables as tabularray tables in the OMG
+# style (full grid). specification.lua is the hook for a specification's own
+# filter (the core version does nothing).
+filters:
+  - ${.}/code-characters.lua
+  - ${.}/html-tables.lua
+  - ${.}/crossref-links.lua
+  - pandoc-crossref
+  - ${.}/specification.lua
+  - ${.}/tables.lua
+
+# Citations ([@DMN16]) become biblatex \autocite commands, matching the biblatex
+# setup (style=alphabetic) of the MDSA templates.
+cite-method: biblatex
+
+# pandoc-crossref settings, see https://lierdakil.github.io/pandoc-crossref/
+metadata:
+  figPrefix: [Figure, Figures]
+  tblPrefix: [Table, Tables]
+  secPrefix: [Section, Sections]

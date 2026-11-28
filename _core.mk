@@ -1,4 +1,4 @@
-.PHONY: gen clean core local md images rfp spec debug
+.PHONY: gen clean core local md images rfp spec debug check
 
 # Several things break if only plain sh is used
 SHELL := /bin/bash
@@ -16,20 +16,29 @@ specacro = $(shell specsetup --lookup specacro --setupFile "${source}/_${doc}_Se
 version  = $(shell specsetup --lookup version --setupFile "${source}/_${doc}_Setup.tex")
 
 rfp: doc="RFP"
+# RFP files are fragments inside the RFP template's sections: '#' is a section
+# there, not a chapter as in specifications
+rfp: _pandoc_opts=--top-level-division=section
 rfp: "${build}" tools rfp_core local md images
 	@echo --- Creating PDF
 	mv "${build}/${doc}.tex" "${build}/${pdfnamebase}.tex"
-	cp "${source}/.latexmkrc" "${build}/.latexmkrc"  2>/dev/null ;
+	if [ -f "${source}/.latexmkrc" ]; then cp "${source}/.latexmkrc" "${build}/.latexmkrc" ; fi
 	touch "${build}/.latexmkrc" 2>/dev/null ;
-	cd "${build}" && latexmk -bibtex -pdf -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
+	cd "${build}" && max_print_line=10000 latexmk -bibtex -pdf -shell-escape -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
 
 spec: doc="Specification"
 spec: "${build}" tools "${gencondir}" core local md images 
 	@echo --- Creating PDF ;
 	mv "${build}/${doc}.tex" "${build}/${pdfnamebase}.tex" ;
-	cp "${source}/.latexmkrc" "${build}/.latexmkrc"  2>/dev/null ;
+	if [ -f "${source}/.latexmkrc" ]; then cp "${source}/.latexmkrc" "${build}/.latexmkrc" ; fi
 	touch "${build}/.latexmkrc" 2>/dev/null ;
-	cd "${build}" && latexmk -bibtex -pdf -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
+	cd "${build}" && max_print_line=10000 latexmk -bibtex -pdf -shell-escape -auxdir=. -outdir="${source}" "./${pdfnamebase}.tex" ${_outputstream}
+
+# Build, then check for problems that LaTeX does not treat as errors (undefined
+# references and citations, unprocessed Markdown references). Fails if any are found.
+check: all
+	@echo --- Checking ${pdfnamebase}
+	@bash mdsa-omg-core/check.sh "${build}/${pdfnamebase}.log" $(subst ${source}/,${build}/,$(subst .md,.tex,${markdowns}))
 
 # Only generate from the model if there is an appropriate ${specacro}.config file. I.e. UML.config or BPMN.config.
 gen: "${gencondir}"
@@ -65,14 +74,25 @@ clean:
 
 
 # LaTeX files support (local and core)
-coretex := $(wildcard mdsa-omg-core/*.sty) $(wildcard mdsa-omg-core/*.bib) $(wildcard mdsa-omg-core/*.yaml) 
+coretex := $(wildcard mdsa-omg-core/*.sty) $(wildcard mdsa-omg-core/*.bib) $(wildcard mdsa-omg-core/*.yaml) $(wildcard mdsa-omg-core/*.latex) $(wildcard mdsa-omg-core/*.lua)
 localtex := $(wildcard ${source}/*.tex) $(wildcard ${source}/*.bib)
 markdowns := $(filter-out ${source}/README.md, $(wildcard ${source}/*.md))
 core: $(subst mdsa-omg-core,${build},${coretex} $(wildcard mdsa-omg-core/*.tex) )
 rfp_core: $(subst mdsa-omg-core,${build},$(wildcard mdsa-omg-core/RFP*) ${coretex})
 spec_core: $(subst mdsa-omg-core,${build},$(wildcard mdsa-omg-core/*pecification*) ${coretex})
 local: $(subst ${source}/,${build}/,${localtex}) 
-md: ${build} $(subst ${source}/,${build}/,$(subst .md,.tex,${markdowns}))
+md: ${build} $(subst ${source}/,${build}/,$(subst .md,.tex,${markdowns})) ${build}/pandoc-preamble.tex
+
+# LaTeX definitions that content converted from Markdown depends on (tables, images,
+# inline code). Generated from pandoc's own template, so they match the pandoc version
+# in use. Included by the templates with \InputIfFileExists.
+${build}/pandoc-preamble.tex: ${markdowns} ${build}/omgPreamble.yaml ${build}/pandoc-preamble.latex
+	@if [ -n "${markdowns}" ]; then \
+		echo "pandoc -> $@" ; \
+		pandoc ${markdowns} --defaults "${build}/omgPreamble.yaml" -o $@ ; \
+	else \
+		touch $@ ; \
+	fi
 imagefiles := $(subst ${source}/,${build}/,$(wildcard ${source}/Images/*.svg))
 images: ${imagefiles}
 # echo ${imagefiles}
@@ -80,41 +100,57 @@ images: ${imagefiles}
 # 	mkdir -p ${build}/Images
 
 
-# Order of rules is important. This order allows local .tex files to override core .tex files, 
-# and local .md files to override both
-${build}/%.tex: mdsa-omg-core/%.tex
-	cp $< $@
-
-${build}/%.tex: ${source}/%.tex
-	cp $< $@
+# Order of rules is important: for pattern rules with the same stem, GNU make
+# uses the FIRST matching rule. Local .md files therefore come first, then local
+# .tex files, then core .tex files: local .md files override local .tex files,
+# and both override core .tex files.
 
 # Zero length files converted by pandoc end up non-zero-length, which breaks OMG templates
 # Don't convert empty files, just touch
-${build}/%.tex: ${source}/%.md
+corelua := $(addprefix ${build}/,$(notdir $(wildcard mdsa-omg-core/*.lua)))
+
+${build}/%.tex: ${source}/%.md ${build}/omgLaTeX.yaml ${corelua}
 	@size=$(shell du -ks $< | cut -f1) ; \
 	if (( $${size} > 0 )); then \
-		pandoc $< -f markdown --defaults "${build}/omgLaTeX.yaml" -t latex -o $@ ; \
+		echo "pandoc $< -> $@" ; \
+		pandoc $< --defaults "${build}/omgLaTeX.yaml" ${_pandoc_opts} -o $@ ; \
 	else \
 		touch $@ ; \
 	fi
 
+${build}/%.tex: ${source}/%.tex
+	cp $< $@
+
+${build}/%.tex: mdsa-omg-core/%.tex
+	cp $< $@
+
 ${build}/%.sty: mdsa-omg-core/%.sty
 	cp $< $@
 
-# As above, local *.bib files override core *.bib files if both exist.
-${build}/%.bib: mdsa-omg-core/%.bib
-	cp $< $@
-
+# As above, local *.bib and *.yaml files override core files if both exist.
 ${build}/%.bib: ${source}/%.bib
 	cp $< $@
 
-${build}/%.yaml: mdsa-omg-core/%.yaml
+${build}/%.bib: mdsa-omg-core/%.bib
 	cp $< $@
 
 ${build}/%.yaml: ${source}/%.yaml
 	cp $< $@
 
+${build}/%.yaml: mdsa-omg-core/%.yaml
+	cp $< $@
+
+${build}/%.latex: mdsa-omg-core/%.latex
+	cp $< $@
+
+# A specification's own specification.lua (or other filter) overrides the core's
+${build}/%.lua: ${source}/%.lua
+	cp $< $@
+
+${build}/%.lua: mdsa-omg-core/%.lua
+	cp $< $@
+
 # SVG is the only format formally accepted by OMG for documents
 ${build}/Images/%.svg: ${source}/Images/%.svg
-	echo $<
-	cp $< $0
+	mkdir -p "$(dir $@)"
+	cp $< $@
