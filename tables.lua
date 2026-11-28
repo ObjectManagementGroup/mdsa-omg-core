@@ -68,17 +68,27 @@ local function widths(tbl, rows)
   for _, row in ipairs(rows) do
     for _, c in ipairs(row.cells) do
       if c.cell.col_span == 1 then
-        local text = pandoc.utils.stringify(c.cell.contents)
+        -- code that a specification filter wrote as raw \lstinline (e.g. FEEL in
+        -- DMN) counts like code
+        local raw = {}
+        c.cell.contents:walk({ RawInline = function(r)
+          local _, code = r.text:match('\\lstinline%b[](.)(.-)%1')
+          if not code then _, code = r.text:match('\\lstinline([^%[%w])(.-)%1') end
+          if code then table.insert(raw, code) end
+        end })
+        local text = pandoc.utils.stringify(c.cell.contents) .. ' ' .. table.concat(raw, ' ')
         len[c.col] = math.max(len[c.col], math.min(#text, 60))
         for token in text:gmatch('%S+') do
           word[c.col] = math.max(word[c.col], math.min(#token, 30))
         end
         -- code is set in a wider (monospaced) font and should not break
-        c.cell.contents:walk({ Code = function(code)
-          for token in code.text:gmatch('%S+') do
+        local function code_tokens(t)
+          for token in t:gmatch('%S+') do
             word[c.col] = math.max(word[c.col], math.min(#token * 1.4, 40))
           end
-        end })
+        end
+        c.cell.contents:walk({ Code = function(code) code_tokens(code.text) end })
+        for _, t in ipairs(raw) do code_tokens(t) end
       end
     end
   end
