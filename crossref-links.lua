@@ -136,7 +136,11 @@ local function index_of(blocks)
       for i, el in ipairs(list) do
         if el.t == 'Header' and el.identifier ~= '' then
           local caption = table_caption(el)
-          local is_table = caption ~= nil and list[i + 1] ~= nil and list[i + 1].t == 'Table'
+          -- other files are read without html-tables.lua: an HTML table is
+          -- still raw HTML there
+          local nxt = list[i + 1]
+          local is_table = caption ~= nil and nxt ~= nil and (nxt.t == 'Table'
+            or (nxt.t == 'RawBlock' and nxt.format == 'html' and nxt.text:match('^%s*<table') ~= nil))
           idx.headings[el.identifier] = {
             level = el.level,
             title = is_table and caption or stringify(el.content),

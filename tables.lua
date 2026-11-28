@@ -153,7 +153,9 @@ render = function(tbl, nested)
   local lines = tbl.attributes['tblr-lines'] or 'hlines, vlines'
   if lines ~= '' then table.insert(inner, 2, lines) end
   if nhead > 0 then
-    table.insert(inner, ('rowhead=%d'):format(nhead))
+    -- repeated header rows need a row below them (a table of only header
+    -- rows fails in tabularray)
+    if nhead < #rows then table.insert(inner, ('rowhead=%d'):format(nhead)) end
     table.insert(inner, ('row{1-%d}={font=\\omgtablehead}'):format(nhead))
   end
   if tbl.attributes['tblr-inner'] then table.insert(inner, tbl.attributes['tblr-inner']) end
